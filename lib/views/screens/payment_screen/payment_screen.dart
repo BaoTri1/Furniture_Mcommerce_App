@@ -315,7 +315,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                         children: [
                           const SvgIcon(
                             icon: SvgIconData(
-                                'assets/icons/icon_paying_by_redict.svg'),
+                                'assets/icons/icon_paying_by_cash.svg'),
                             size: 35,
                           ),
                           Container(
@@ -325,7 +325,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                               style: TextStyle(
                                   fontFamily: 'NunitoSans',
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   color: Color(0xff303030)),
                             ),
                           )
@@ -556,7 +556,10 @@ class PaymentScreenState extends State<PaymentScreen> {
                           fontFamily: 'NunitoSans',
                           fontWeight: FontWeight.w600,
                           fontSize: 20)),
-                  onPressed: () {},
+                  onPressed: () {
+                    showAlertDialog(context);
+                    //Navigator.of(context).pop(context);
+                  },
                 ),
               ),
             ),
@@ -633,6 +636,33 @@ class PaymentScreenState extends State<PaymentScreen> {
               ),
             )),
       ],
+    );
+  }
+
+  showAlertDialog(BuildContext context) {
+    // Create button
+    Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    // Create AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Thông báo đặt hàng"),
+      content: Text("Đã đặt hàng thành công."),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 }

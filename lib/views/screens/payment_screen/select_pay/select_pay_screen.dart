@@ -7,36 +7,32 @@ class SelectPay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Select Pay Screen',
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const Text(
-            'Chọn phương thức thanh toán',
-            style: TextStyle(
-                fontFamily: 'Merriweather',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: Color(0xff303030)),
-          ),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const SvgIcon(
-              color: Color(0xff808080),
-              responsiveColor: false,
-              icon: SvgIconData('assets/icons/icon_back.svg'),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Chọn phương thức thanh toán',
+          style: TextStyle(
+              fontFamily: 'Merriweather',
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: Color(0xff303030)),
         ),
-        body: ListView.builder(
-          itemBuilder: _buildItemPay,
-          itemCount: _listPay.length,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const SvgIcon(
+            color: Color(0xff808080),
+            responsiveColor: false,
+            icon: SvgIconData('assets/icons/icon_back.svg'),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
+      ),
+      body: ListView.builder(
+        itemBuilder: _buildItemPay,
+        itemCount: _listPay.length,
       ),
     );
   }
@@ -45,7 +41,9 @@ class SelectPay extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          Navigator.pop(context);
+        },
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
           child: ClipRRect(

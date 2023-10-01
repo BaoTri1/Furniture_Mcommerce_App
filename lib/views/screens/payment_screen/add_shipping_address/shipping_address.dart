@@ -232,9 +232,9 @@ List<ShippingAddress> _listAddress = [
   ShippingAddress(
       id: 2,
       id_user: 'U01',
-      name: 'Phạm Văn B',
+      name: 'Phạm Bảo Trí',
       sdt: '0123456789',
-      address: '27, mậu thân, ninh kiều, cần thơ',
+      address: '25 rue Robert Latouche, Nice, 06200, Côte D’azur, France',
       isDefault: true),
   ShippingAddress(
       id: 3,

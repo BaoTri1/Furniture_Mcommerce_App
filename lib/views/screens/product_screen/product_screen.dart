@@ -342,6 +342,8 @@ class ProductScreenState extends State<ProductScreen> {
                         onPressed: () {
                           int a = products.length;
                           print('$a');
+                          showAlertDialog(
+                              context, 'Đã thêm vào sản phẩm yêu thích.');
                         },
                         icon: const SvgIcon(
                             icon: SvgIconData('assets/icons/icon_mark.svg'))),
@@ -363,7 +365,9 @@ class ProductScreenState extends State<ProductScreen> {
                             fontFamily: 'NunitoSans',
                             fontWeight: FontWeight.w600,
                             fontSize: 20)),
-                    onPressed: () {},
+                    onPressed: () {
+                      showAlertDialog(context, 'Đã thêm vào giỏ hàng');
+                    },
                   )),
                 ],
               ),
@@ -371,6 +375,33 @@ class ProductScreenState extends State<ProductScreen> {
           ),
         ],
       )),
+    );
+  }
+
+  showAlertDialog(BuildContext context, String text) {
+    // Create button
+    Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    // Create AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Thông báo"),
+      content: Text(text),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 }

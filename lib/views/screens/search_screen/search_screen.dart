@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/views/screens/search_screen/product_search.dart';
 
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
@@ -43,12 +44,16 @@ class SearchScreen extends StatelessWidget {
                       color: Color(0xffE0E0E0),
                       fontSize: 16),
                   suffixIcon: IconButton(
-                    icon: const SvgIcon(
-                      icon: SvgIconData('assets/icons/icon_search.svg'),
-                      color: Colors.black,
-                    ),
-                    onPressed: () {},
-                  ),
+                      icon: const SvgIcon(
+                        icon: SvgIconData('assets/icons/icon_search.svg'),
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ProductSearch()));
+                      }),
                 ),
               ),
             )),

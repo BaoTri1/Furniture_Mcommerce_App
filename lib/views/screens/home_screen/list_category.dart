@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/views/screens/search_screen/product_search.dart';
 
 List<String> categorys = [
   'Phòng',
@@ -37,6 +38,8 @@ class ListCategoryWidget extends StatelessWidget {
             return GestureDetector(
               onTap: () {
                 print('${categorys[index]} + ' '${icons[index]}');
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ProductSearch()));
               },
               child: Card(
                 color: const Color(0xffF0F0F0),
