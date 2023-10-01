@@ -12,9 +12,14 @@ class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context, rootNavigator: true)
-            .push(MaterialPageRoute(builder: (_) => const ProductScreen()));
+      onTap: () async {
+        final result = await Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+                builder: (_) => ProductScreen(name: productInfor.name)));
+
+        late Product receive;
+        if (result != null) receive = result;
+        print(receive.name + ' ' + receive.price.toString());
       },
       child: Stack(
         children: [

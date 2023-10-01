@@ -122,8 +122,10 @@ class FavoritesScreenState extends State<FavoritesScreen> {
   Widget _buildItemFavorite(BuildContext context, int index) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context, rootNavigator: true)
-            .push(MaterialPageRoute(builder: (_) => const ProductScreen()));
+        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+            builder: (_) => ProductScreen(
+                  name: _products[index].name,
+                )));
       },
       child: Stack(
         children: [

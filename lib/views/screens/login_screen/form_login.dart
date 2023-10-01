@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:furniture_mcommerce_app/views/main.dart';
+import 'package:furniture_mcommerce_app/views/screens/signup_screen/signup_screen.dart';
 
 class FormLogin extends StatefulWidget {
   const FormLogin({super.key});
@@ -133,6 +135,12 @@ class FormLoginState extends State<FormLogin> {
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       print('${_sdt} + ${_passwd}');
+                      if (_sdt == '0123456789' && _passwd == '123') {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MainScreen()));
+                      }
                     }
                   },
                   child: const Text('Đăng nhập',
@@ -156,7 +164,12 @@ class FormLoginState extends State<FormLogin> {
                       color: Color(0xff303030),
                       fontSize: 18),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignupScreen()));
+                },
               )),
               const SizedBox(
                 height: 40,

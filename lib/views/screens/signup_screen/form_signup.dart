@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:furniture_mcommerce_app/views/main.dart';
+import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
 
 class SignupForm extends StatefulWidget {
   const SignupForm({super.key});
@@ -208,6 +210,10 @@ class SignupFormState extends State<SignupForm> {
                     if (_formKey.currentState!.validate()) {
                       print(
                           '${_fullName} + ${_sdt} + ${_passwd} + ${_comfirmPasswd}');
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const MainScreen()));
                     }
                   },
                   child: const Text('Đăng ký',
@@ -241,7 +247,12 @@ class SignupFormState extends State<SignupForm> {
                           color: Color(0xff303030),
                           fontSize: 14),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()));
+                    },
                   )
                 ],
               ),

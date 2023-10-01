@@ -8,16 +8,22 @@ import 'package:expandable_text/expandable_text.dart';
 
 import '../home_screen/product_item.dart';
 
+// ignore: must_be_immutable
 class ProductScreen extends StatefulWidget {
-  const ProductScreen({super.key});
+  ProductScreen({super.key, required this.name});
+  String name;
 
   @override
   State<StatefulWidget> createState() {
-    return ProductScreenState();
+    // ignore: no_logic_in_create_state
+    return ProductScreenState(name: name);
   }
 }
 
 class ProductScreenState extends State<ProductScreen> {
+  ProductScreenState({required this.name});
+  String name;
+
   late PageController _pageController;
   int activePage = 0;
   int review = 50;
@@ -77,11 +83,11 @@ class ProductScreenState extends State<ProductScreen> {
                       color: Colors.black,
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context, _products[0]);
                     },
                   ),
                   backgroundColor: Colors.white,
-                  expandedHeight: 250.0,
+                  expandedHeight: 300.0,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Column(
@@ -155,7 +161,7 @@ class ProductScreenState extends State<ProductScreen> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        print('mo danh gia');
+                        print('mo danh gia' + this.name);
                       },
                       child: Row(children: [
                         const Icon(
@@ -273,7 +279,7 @@ class ProductScreenState extends State<ProductScreen> {
               SliverToBoxAdapter(
                 child: _products.isNotEmpty
                     ? Container(
-                        margin: EdgeInsets.all(10),
+                        margin: const EdgeInsets.all(10),
                         child: const Center(
                           child: Text(
                             'Sản phẩm tương tự',

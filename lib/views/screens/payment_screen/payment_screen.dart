@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/models/item_cart.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_ship/select_ship_screen.dart';
 import 'package:intl/intl.dart';
 
 class PaymentScreen extends StatefulWidget {
@@ -15,31 +18,36 @@ class PaymentScreen extends StatefulWidget {
 class PaymentScreenState extends State<PaymentScreen> {
   final List<ItemCart> _listItem = [
     ItemCart(
-        id: 'SP01',
+        id: 1,
+        id_user: 'U01',
         name: 'Bàn 1',
         quantity: 2,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP02',
+        id: 2,
+        id_user: 'U01',
         name: 'Bàn 2',
         quantity: 1,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP03',
+        id: 3,
+        id_user: 'U01',
         name: 'Bàn 3',
         quantity: 1,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP04',
+        id: 4,
+        id_user: 'U01',
         name: 'Bàn 4',
         quantity: 3,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP05',
+        id: 5,
+        id_user: 'U01',
         name: 'Bàn 5',
         quantity: 2,
         price: 20000000,
@@ -94,7 +102,13 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10),
                     child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ShippingAddressScreen()));
+                        },
                         icon: const SvgIcon(
                             icon: SvgIconData('assets/icons/icon_edit.svg'))),
                   )
@@ -121,7 +135,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                         Container(
                           margin: const EdgeInsets.all(10),
                           child: const Text(
-                            'Phạm Bảo Trí',
+                            'Phạm Bảo Trí | SĐT: 0123456789',
                             style: TextStyle(
                                 fontFamily: 'NunitoSans',
                                 fontWeight: FontWeight.w700,
@@ -265,7 +279,12 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10, top: 20),
                     child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelectPay()));
+                        },
                         icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_edit.svg'),
                           color: Color(0xff808080),
@@ -302,7 +321,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                           Container(
                             margin: const EdgeInsets.only(left: 10),
                             child: const Text(
-                              'Thanh toán bằng thẻ tín dụng',
+                              'Thanh toán trực tiếp khi nhận hàng.',
                               style: TextStyle(
                                   fontFamily: 'NunitoSans',
                                   fontWeight: FontWeight.w700,
@@ -343,7 +362,12 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10, top: 20),
                     child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelectShip()));
+                        },
                         icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_edit.svg'),
                           color: Color(0xff808080),

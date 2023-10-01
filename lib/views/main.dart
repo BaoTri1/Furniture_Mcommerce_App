@@ -4,6 +4,9 @@ import 'package:furniture_mcommerce_app/views/screens/cart_screen/cart_screen.da
 import 'package:furniture_mcommerce_app/views/screens/favorites_screen/favorites_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/home_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/notify_screen/notify_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/profile_screen/profile_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/search_screen/search_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/home_screen/home_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/signup_screen/signup_screen.dart';
@@ -21,18 +24,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Furniture Store',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/cart': (context) => const CartScreen()
-      },
-      home: const MainScreen(),
-    );
+        title: 'Furniture Store',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/cart': (context) => const CartScreen(),
+          '/search': (context) => const SearchScreen()
+        },
+        home: const MainScreen());
   }
 }
 
@@ -48,7 +51,12 @@ class MainScreen extends StatefulWidget {
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  List<Widget> screenList = [const HomeScreen(), const FavoritesScreen()];
+  List<Widget> screenList = [
+    const HomeScreen(),
+    const FavoritesScreen(),
+    const NotificationScreen(),
+    const ProfileScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {

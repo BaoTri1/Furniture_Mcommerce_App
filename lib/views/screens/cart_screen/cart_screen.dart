@@ -20,31 +20,36 @@ class CartScreenState extends State<CartScreen> {
 
   final List<ItemCart> _listItem = [
     ItemCart(
-        id: 'SP01',
+        id: 1,
+        id_user: 'U01',
         name: 'Bàn 1',
         quantity: 2,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP02',
+        id: 2,
+        id_user: 'U01',
         name: 'Bàn 2',
         quantity: 1,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP03',
+        id: 3,
+        id_user: 'U01',
         name: 'Bàn 3',
         quantity: 1,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP04',
+        id: 4,
+        id_user: 'U01',
         name: 'Bàn 4',
         quantity: 3,
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
     ItemCart(
-        id: 'SP05',
+        id: 5,
+        id_user: 'U01',
         name: 'Bàn 5',
         quantity: 2,
         price: 20000000,
@@ -175,8 +180,10 @@ class CartScreenState extends State<CartScreen> {
   Widget _buildItemCart(BuildContext context, int index) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context, rootNavigator: true)
-            .push(MaterialPageRoute(builder: (_) => const ProductScreen()));
+        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+            builder: (_) => ProductScreen(
+                  name: _listItem[index].name,
+                )));
       },
       child: Stack(
         children: [

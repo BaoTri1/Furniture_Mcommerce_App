@@ -94,7 +94,9 @@ class HomeScreenState extends State<HomeScreen> {
               responsiveColor: false,
               icon: SvgIconData('assets/icons/icon_search.svg'),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/search');
+            },
           ),
           actions: [
             IconButton(
