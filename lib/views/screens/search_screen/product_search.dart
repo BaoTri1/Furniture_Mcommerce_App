@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
-import 'package:furniture_mcommerce_app/views/screens/home_screen/list_category.dart';
 
 import '../../../models/product.dart';
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/district.dart';
 import 'package:furniture_mcommerce_app/models/province.dart';
 import 'package:furniture_mcommerce_app/models/shipping_address.dart';
@@ -7,6 +9,7 @@ import 'package:furniture_mcommerce_app/models/ward.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_district.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_province.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_ward.dart';
+import 'package:furniture_mcommerce_app/views/shared_resources/check_string.dart';
 
 // ignore: must_be_immutable
 class AddShippingAddress extends StatelessWidget {
@@ -17,10 +20,7 @@ class AddShippingAddress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Add Shipping Address Screen',
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+    return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.white,
             title: const Text(
@@ -49,8 +49,7 @@ class AddShippingAddress extends StatelessWidget {
               child: FormAddAddress(
                 isEdit: isEdit,
                 shippingAddress: shippingAddress,
-              ))),
-    );
+              )));
   }
 }
 
@@ -74,6 +73,7 @@ class FormAddAddressState extends State<FormAddAddress> {
 
   ShippingAddress? shippingAddress;
   bool isEdit;
+  late int newId;
 
   final _formKey = GlobalKey<FormState>();
   late String _name;
@@ -93,8 +93,13 @@ class FormAddAddressState extends State<FormAddAddress> {
   late TextEditingController _controllerDistrict;
   late TextEditingController _controllerWard;
 
+  void createNewID() async {
+    newId = await ShippingAddressHandler.lastIndex() + 1;
+  }
+
   @override
   void initState() {
+    createNewID();
     if (isEdit) {
       print(shippingAddress?.address);
       _controllerName = TextEditingController(text: shippingAddress?.name);
@@ -128,6 +133,7 @@ class FormAddAddressState extends State<FormAddAddress> {
             children: [
               TextFormField(
                 controller: _controllerName,
+                keyboardType: TextInputType.name,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   filled: true,
@@ -153,6 +159,10 @@ class FormAddAddressState extends State<FormAddAddress> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Họ tên không để trống!';
+                  }
+
+                  if(CheckString.checkNumandSpecialCharacters(value)){
+                    return 'Họ và tên không hợp lệ';
                   }
                   _name = value.trim();
                   return null;
@@ -192,6 +202,10 @@ class FormAddAddressState extends State<FormAddAddress> {
                   if (value == null || value.isEmpty) {
                     return 'Số điện thoại không để trống!';
                   }
+
+                  if(value.length < 10){
+                    return 'Số điện thoại không hợp lệ!';
+                  }
                   _sdt = value.trim();
                   return null;
                 },
@@ -228,7 +242,11 @@ class FormAddAddressState extends State<FormAddAddress> {
                   if (value == null || value.isEmpty) {
                     return 'Số nhà không để trống!';
                   }
-                  _address = value.trim();
+
+                  if(CheckString.checkSpecialCharacters(value)){
+                    return 'Địa chỉ không hợp lệ!';
+                  }
+                  _address = value.trim().replaceAll(', ', ' ');
                   return null;
                 },
               ),
@@ -264,8 +282,13 @@ class FormAddAddressState extends State<FormAddAddress> {
                     });
                   }
                 },
-                child: TextField(
+                child: TextFormField(
                   enabled: false,
+                  style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xff242424),
+                      fontSize: 16),
                   controller: _controllerProvince,
                   decoration: InputDecoration(
                       filled: true,
@@ -285,6 +308,12 @@ class FormAddAddressState extends State<FormAddAddress> {
                         Icons.chevron_right,
                         color: Colors.black,
                       )),
+                  validator: (value) {
+                    if(value == null || value.isEmpty){
+                      return 'Phải chọn thành phố/tỉnh của bạn';
+                    }
+                    return null;
+                  },
                 ),
               ),
               const SizedBox(
@@ -323,8 +352,14 @@ class FormAddAddressState extends State<FormAddAddress> {
                     });
                   }
                 },
-                child: TextField(
+                child: TextFormField(
                   enabled: false,
+                  style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xff242424),
+                      fontSize: 16),
+                  controller: _controllerDistrict,
                   decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
@@ -343,6 +378,12 @@ class FormAddAddressState extends State<FormAddAddress> {
                         Icons.chevron_right,
                         color: Colors.black,
                       )),
+                  validator: (value) {
+                      if(value == null || value.isEmpty){
+                        return 'Phải chọn quận/huyện của bạn!';
+                      }
+                      return null;
+                  },
                 ),
               ),
               const SizedBox(
@@ -381,8 +422,14 @@ class FormAddAddressState extends State<FormAddAddress> {
                     });
                   }
                 },
-                child: TextField(
+                child: TextFormField(
                   enabled: false,
+                  style: const TextStyle(
+                      fontFamily: 'Nunito Sans',
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xff242424),
+                      fontSize: 16),
+                  controller: _controllerWard,
                   decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
@@ -401,43 +448,66 @@ class FormAddAddressState extends State<FormAddAddress> {
                         Icons.chevron_right,
                         color: Colors.black,
                       )),
+                  validator: (value) {
+                    if(value == null || value.isEmpty){
+                      return 'Phải chọn phường/xã của bạn!';
+                    }
+                    return null;
+                  },
                 ),
               ),
               const SizedBox(
                 width: 30,
                 height: 30,
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(340, 60),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8))),
-                child: const Text('Lưu địa chỉ',
-                    style: TextStyle(
-                        fontFamily: 'NunitoSans',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20)),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (isEdit) {
-                      //Update lại address
-                    } else {
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(340, 60),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
+                  child: const Text('Lưu địa chỉ',
+                      style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20)),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
                       String address =
                           '$_address, ${_controllerWard.text}, ${_controllerDistrict.text}, ${_controllerProvince.text}';
-                      ShippingAddress newShippingAddress = ShippingAddress(
-                          id: 1,
-                          id_user: 'U01',
-                          name: _name,
-                          sdt: _sdt,
-                          address: address,
-                          isDefault: false);
+                      if (isEdit) {
+                        ShippingAddress updateShippingAddress = ShippingAddress(
+                            id: shippingAddress!.id,
+                            id_user: shippingAddress!.id_user,
+                            name: _name,
+                            sdt: _sdt,
+                            address: address,
+                            isDefault: shippingAddress!.isDefault);
+                        //Update lại address
+                        ShippingAddressHandler.updateShippingAddress(updateShippingAddress);
 
-                      print(newShippingAddress.address);
+                      } else {
+                        print('new ID: ${newId}');
+                        ShippingAddress newShippingAddress = ShippingAddress(
+                            id: newId,
+                            id_user: 'U01',
+                            name: _name,
+                            sdt: _sdt,
+                            address: address,
+                            isDefault: 0);
+                        //Insert
+                        ShippingAddressHandler.insertShippingAddress(
+                            newShippingAddress);
+
+                        print(newShippingAddress.address);
+                      }
+
+                      Navigator.pop(context);
                     }
-                  }
-                },
+                  },
+                ),
               ),
               const SizedBox(
                 width: 30,

@@ -3,7 +3,6 @@ import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class ShippingAddressScreen extends StatefulWidget {
   const ShippingAddressScreen({super.key});
@@ -17,11 +16,21 @@ class ShippingAddressScreen extends StatefulWidget {
 class ShippingAddressScreenState extends State<ShippingAddressScreen> {
   late int _isCheckedIndex;
 
-  // List<ShippingAddress> _listAddress = [];
+  List<ShippingAddress> _listAddress = [];
 
   void _setIsCheckedIndex() {
+    if(_listAddress.isEmpty){
+      _isCheckedIndex = -1;
+      return;
+    }
     for (int i = 0; i < _listAddress.length; i++) {
-      if (_listAddress[i].isDefault) _isCheckedIndex = i;
+      if (_listAddress[i].isDefault == 1){
+        _isCheckedIndex = i;
+        return;
+      }
+      else {
+        _isCheckedIndex = -1;
+      }
     }
   }
 
@@ -31,15 +40,18 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
     }
   }
 
-  // void createList() async {
-  //   sqfliteFfiInit();
-  //   databaseFactory = databaseFactoryFfi;
-  //   _listAddress = await ShippingAddressHandler.getListItemShippingAddress();
-  // }
+  void createListAddress() async {
+    List<ShippingAddress> datas = await ShippingAddressHandler.getListItemShippingAddress('U01');
+    setState(() {
+      _listAddress = datas;
+    });
+  }
 
   @override
   void initState() {
     _setIsCheckedIndex();
+    createListAddress();;
+    print(_listAddress.length);
     super.initState();
   }
 
@@ -78,13 +90,16 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
         floatingActionButton: Container(
           margin: const EdgeInsets.only(bottom: 30, right: 10),
           child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async{
+              final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => AddShippingAddress(
                             isEdit: false,
                           )));
+
+              createListAddress();
+              print('$_isCheckedIndex');
             },
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
@@ -106,13 +121,21 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
               Row(
                 children: [
                   Checkbox(
-                    value: _listAddress[index].isDefault,
+                    value: _listAddress[index].isDefault == 1,
                     onChanged: (bool? value) {
                       setState(() {
-                        _listAddress[index].isDefault = value ?? false;
-                        _listAddress[_isCheckedIndex].isDefault = false;
+                        print('goi roi ne $value : index: $index idexCheck: $_isCheckedIndex');
+                        print('${_listAddress[index].name} : index: $index');
+                        value ?? false
+                            ? _listAddress[index].isDefault = 1
+                            : _listAddress[index].isDefault = 0;
+                        if(_isCheckedIndex != -1 && _isCheckedIndex != index){
+                          _listAddress[_isCheckedIndex].isDefault = 0;
+                          ShippingAddressHandler.updateShippingAddress(_listAddress[_isCheckedIndex]);
+                        }
                         _isCheckedIndex = index;
                         printTest();
+                        ShippingAddressHandler.updateShippingAddress(_listAddress[index]);
                       });
                     },
                     checkColor: Colors.white,
@@ -134,19 +157,24 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async{
+                        final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => AddShippingAddress(
                                       isEdit: true,
                                       shippingAddress: _listAddress[index],
                                     )));
+                        createListAddress();
                       },
                       icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_edit.svg'))),
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ShippingAddressHandler.deleteItemShippingAddress(_listAddress[index].id, _listAddress[index].id_user);
+                        createListAddress();
+                        if(_listAddress.isEmpty) _isCheckedIndex = -1;
+                      },
                       icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_bin.svg')))
                 ],
@@ -214,40 +242,40 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
   }
 }
 
-List<ShippingAddress> _listAddress = [
-  ShippingAddress(
-      id: 1,
-      id_user: 'U01',
-      name: 'Phạm Văn A',
-      sdt: '0123456789',
-      address: '27, mậu thân, ninh kiều, cần thơ',
-      isDefault: false),
-  ShippingAddress(
-      id: 1,
-      id_user: 'U01',
-      name: 'Phạm Văn A',
-      sdt: '0123456789',
-      address: '27, mậu thân, ninh kiều, cần thơ',
-      isDefault: false),
-  ShippingAddress(
-      id: 2,
-      id_user: 'U01',
-      name: 'Phạm Bảo Trí',
-      sdt: '0123456789',
-      address: '25 rue Robert Latouche, Nice, 06200, Côte D’azur, France',
-      isDefault: true),
-  ShippingAddress(
-      id: 3,
-      id_user: 'U01',
-      name: 'Phạm Văn C',
-      sdt: '0123456789',
-      address: '27, mậu thân, ninh kiều, cần thơ',
-      isDefault: false),
-  ShippingAddress(
-      id: 4,
-      id_user: 'U01',
-      name: 'Phạm Văn D',
-      sdt: '0123456789',
-      address: '27, mậu thân, ninh kiều, cần thơ',
-      isDefault: false),
-];
+// List<ShippingAddress> _listAddress = [
+//   ShippingAddress(
+//       id: 1,
+//       id_user: 'U01',
+//       name: 'Phạm Văn A',
+//       sdt: '0123456789',
+//       address: '27, mậu thân, ninh kiều, cần thơ',
+//       isDefault: false),
+//   ShippingAddress(
+//       id: 1,
+//       id_user: 'U01',
+//       name: 'Phạm Văn A',
+//       sdt: '0123456789',
+//       address: '27, mậu thân, ninh kiều, cần thơ',
+//       isDefault: false),
+//   ShippingAddress(
+//       id: 2,
+//       id_user: 'U01',
+//       name: 'Phạm Bảo Trí',
+//       sdt: '0123456789',
+//       address: '25 rue Robert Latouche, Nice, 06200, Côte D’azur, France',
+//       isDefault: true),
+//   ShippingAddress(
+//       id: 3,
+//       id_user: 'U01',
+//       name: 'Phạm Văn C',
+//       sdt: '0123456789',
+//       address: '27, mậu thân, ninh kiều, cần thơ',
+//       isDefault: false),
+//   ShippingAddress(
+//       id: 4,
+//       id_user: 'U01',
+//       name: 'Phạm Văn D',
+//       sdt: '0123456789',
+//       address: '27, mậu thân, ninh kiều, cần thơ',
+//       isDefault: false),
+// ];

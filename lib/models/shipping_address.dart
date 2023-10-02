@@ -4,7 +4,7 @@ class ShippingAddress {
   late String name;
   late String sdt;
   late String address;
-  late bool isDefault;
+  late int isDefault;
 
   ShippingAddress(
       {required this.id,

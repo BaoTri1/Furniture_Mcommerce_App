@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/item_cart.dart';
+import 'package:furniture_mcommerce_app/models/shipping_address.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_ship/select_ship_screen.dart';
@@ -53,6 +56,17 @@ class PaymentScreenState extends State<PaymentScreen> {
         price: 20000000,
         urlImg: 'assets/images/img_sofa.jpg'),
   ];
+
+  ShippingAddress? shippingAddress;
+
+  @override
+  void initState() {
+    ShippingAddressHandler.getItemShippingAddressDefault('U01').then((data) => {
+      shippingAddress = data
+    });
+    print('name: ${shippingAddress?.name}, address: ${shippingAddress?.address}');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

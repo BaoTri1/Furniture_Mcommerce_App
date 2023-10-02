@@ -21,10 +21,27 @@ class ShippingAddressHandler {
     return maps.length;
   }
 
-  static Future<List<ShippingAddress>> getListItemShippingAddress() async {
+  static Future<int> lastIndex() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-        await db.query(FurnitureShopDatabase.NAME_TABLE_SHIPPING_ADDRESS);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_SHIPPING_ADDRESS);
+
+    int maxindex = 0;
+    if (maps.isNotEmpty) {
+      for (var i = 0; i < maps.length; i++) {
+        if(maps[i]['id'] > maxindex){
+          maxindex = maps[i]['id'];
+        }
+      }
+    }
+
+    return maxindex;
+  }
+
+  static Future<List<ShippingAddress>> getListItemShippingAddress(String idUser) async {
+    Database db = await FurnitureShopDatabase.getInstance();
+    List<Map<String, dynamic>> maps =
+        await db.query(FurnitureShopDatabase.NAME_TABLE_SHIPPING_ADDRESS, where: 'id_user = ?', whereArgs: [idUser]);
     List<ShippingAddress> items = [];
     if (maps.isNotEmpty) {
       for (var i = 0; i < maps.length; i++) {
@@ -34,7 +51,14 @@ class ShippingAddressHandler {
     return items;
   }
 
-  static Future<int> updateShippingAddress(ItemHistorySearch item) async {
+  static Future<ShippingAddress> getItemShippingAddressDefault(String idUser) async {
+    Database db = await FurnitureShopDatabase.getInstance();
+    List<Map<String, dynamic>> maps =
+    await db.query(FurnitureShopDatabase.NAME_TABLE_SHIPPING_ADDRESS, where: 'id_user = ? and isDefault = ?', whereArgs: [idUser, 1]);
+    return ShippingAddress.fromMap(maps[0]);
+  }
+
+  static Future<int> updateShippingAddress(ShippingAddress item) async {
     Database db = await FurnitureShopDatabase.getInstance();
     return await db.update(
         FurnitureShopDatabase.NAME_TABLE_SHIPPING_ADDRESS, item.toMap(),

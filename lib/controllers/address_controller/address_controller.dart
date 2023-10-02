@@ -7,9 +7,12 @@ import 'package:furniture_mcommerce_app/models/ward.dart';
 import 'package:http/http.dart' as http;
 
 class AddressController {
+  // ignore: constant_identifier_names
   static const String url_province = 'https://vapi.vnappmob.com/api/province/';
+  // ignore: constant_identifier_names
   static const String url_district =
       'https://vapi.vnappmob.com/api/province/district/';
+  // ignore: constant_identifier_names
   static const String url_ward = 'https://vapi.vnappmob.com/api/province/ward/';
 
   static ListProvince parseResultsProvince(String responseBody) {
@@ -19,7 +22,7 @@ class AddressController {
   }
 
   static Future<ListProvince> fetchProvince() async {
-    final response = await http.get(Uri.parse('$url_province'));
+    final response = await http.get(Uri.parse(url_province));
     if (response.statusCode == 200) {
       return compute(parseResultsProvince, response.body);
     } else if (response.statusCode == 404) {
@@ -35,8 +38,8 @@ class AddressController {
     return results;
   }
 
-  static Future<ListDistrict> fetchDistrict(String id_province) async {
-    final response = await http.get(Uri.parse('$url_district$id_province'));
+  static Future<ListDistrict> fetchDistrict(String idProvince) async {
+    final response = await http.get(Uri.parse('$url_district$idProvince'));
     if (response.statusCode == 200) {
       return compute(parseResultsDistrict, response.body);
     } else if (response.statusCode == 404) {
@@ -52,8 +55,8 @@ class AddressController {
     return results;
   }
 
-  static Future<ListWard> fetchWard(String id_district) async {
-    final response = await http.get(Uri.parse('$url_ward$id_district'));
+  static Future<ListWard> fetchWard(String idDistrict) async {
+    final response = await http.get(Uri.parse('$url_ward$idDistrict'));
     if (response.statusCode == 200) {
       return compute(parseResultsWard, response.body);
     } else if (response.statusCode == 404) {
