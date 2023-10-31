@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
 
-import '../../../models/product.dart';
+import '../../../models/test/product.dart';
 
 class ProductSearch extends StatefulWidget {
   const ProductSearch({super.key});
@@ -56,9 +56,9 @@ class ProductSearchState extends State<ProductSearch> {
     print('Refreshing...');
   }
 
-  Widget _buildProductItem(BuildContext context, int index) {
-    return ProductItem(_products[index]);
-  }
+  // Widget _buildProductItem(BuildContext context, int index) {
+  //   return ProductItem(_products[index]);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -142,19 +142,19 @@ class ProductSearchState extends State<ProductSearch> {
               //     ),
               //   ),
               // ),
-              SliverPadding(
-                padding: const EdgeInsets.all(10),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(_buildProductItem,
-                      childCount: _products.length),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 4 / 6,
-                  ),
-                ),
-              ),
+              // SliverPadding(
+              //   padding: const EdgeInsets.all(10),
+              //   sliver: SliverGrid(
+              //     delegate: SliverChildBuilderDelegate(_buildProductItem,
+              //         childCount: _products.length),
+              //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              //       crossAxisCount: 2,
+              //       mainAxisSpacing: 10,
+              //       crossAxisSpacing: 10,
+              //       childAspectRatio: 4 / 6,
+              //     ),
+              //   ),
+              // ),
               SliverToBoxAdapter(
                 child: _canLoadMore
                     ? Container(

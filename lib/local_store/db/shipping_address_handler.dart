@@ -1,6 +1,6 @@
 import 'package:furniture_mcommerce_app/local_store/db/furiture_shop_database.dart';
 import 'package:furniture_mcommerce_app/models/item_history_search.dart';
-import 'package:furniture_mcommerce_app/models/shipping_address.dart';
+import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ShippingAddressHandler {

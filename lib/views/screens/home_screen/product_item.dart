@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 import 'package:intl/intl.dart';
-import '../../../models/product.dart';
 
 class ProductItem extends StatelessWidget {
   final Product productInfor;
@@ -13,35 +13,41 @@ class ProductItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
+        print(productInfor.idProduct);
         final result = await Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
-                builder: (_) => ProductScreen(name: productInfor.name)));
+                builder: (_) => ProductScreen(id: productInfor.idProduct!, nameCategory: productInfor.nameCat!,)));
 
         late Product receive;
         if (result != null) receive = result;
-        print(receive.name + ' ' + receive.price.toString());
       },
       child: Stack(
         children: [
           SizedBox(
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
+            // height: MediaQuery.of(context).size.height,
+            //height: 500,
           ),
-          Image.asset(
-            productInfor.urlIamge,
-            fit: BoxFit.cover,
+          Image.network(
+            productInfor.imgUrl!,
+            fit: BoxFit.fill,
             width: 300,
-            height: 200,
+            height: 170,
           ),
           Positioned(
-              top: 210,
-              child: Text(
-                productInfor.name,
-                style: const TextStyle(
-                    fontFamily: 'NunitoSans',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                    color: Color(0xff606060)),
+              top: 180,
+              child: Container(
+                width: 180,
+                child: Text(
+                  productInfor.nameProduct!,
+                  style: const TextStyle(
+                      fontFamily: 'NunitoSans',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                      color: Color(0xff606060)),
+                      softWrap: true,
+                      overflow: TextOverflow.clip,
+                ),
               )),
           Positioned(
               top: 230,
@@ -55,8 +61,8 @@ class ProductItem extends StatelessWidget {
                     color: Color(0xff303030)),
               )),
           Positioned(
-              top: 155,
-              left: 125,
+              top: 125,
+              left: MediaQuery.of(context).size.width>400 ? 145 : 125,
               child: Container(
                 width: 35,
                 height: 35,

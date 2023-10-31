@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/controllers/address_controller/product_controller.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -10,60 +11,108 @@ import '../home_screen/product_item.dart';
 
 // ignore: must_be_immutable
 class ProductScreen extends StatefulWidget {
-  ProductScreen({super.key, required this.name});
-  String name;
+  ProductScreen({super.key, required this.id, required this.nameCategory});
+  String id;
+  String nameCategory;
 
   @override
   State<StatefulWidget> createState() {
     // ignore: no_logic_in_create_state
-    return ProductScreenState(name: name);
+    return ProductScreenState(id: id, nameCategory: nameCategory);
   }
 }
 
 class ProductScreenState extends State<ProductScreen> {
-  ProductScreenState({required this.name});
-  String name;
+  ProductScreenState({required this.id, required this.nameCategory});
+  String id;
+  String nameCategory;
 
+  final ScrollController _controller = ScrollController();
+  static const double _endReachedThreshold = 200;
+  bool _loading = true;
+  bool _canLoadMore = true;
+
+  bool _enabled = true;
+  late Product _product = Product();
+  late final List<Product> _listProductSimilar = [];
+  late List<String> listImage = [];
   late PageController _pageController;
+  int page = 1;
+  int limit = 10;
+  late int totalPage;
   int activePage = 0;
   int review = 50;
   int quantity = 1;
-  String size = 'D2300 - R800 - C760 mm';
-  String material = 'Khung gỗ Ash - nệm bọc vải';
-  String des = 'Sofa Coastal gây ấn tượng bằng những đường cong bồng bềnh,'
-      ' theo xu hướng Modern Organic – gần gũi với thiên nhiên mà vẫn hiện đại, thoải mái. '
-      'Điểm đặc biệt của BST lần này nằm ở sự tỉ mỉ của những người thợ thủ công lành nghề, '
-      'họ đã hoàn thành những đường may uốn lượn không tì vết, mang đến một thiết kế chỉn chu, '
-      '"cân" mọi góc nhìn. Cảm giác êm ái và thư thái sẽ là những tính từ đầu tiên được nhắc đến khi trải nghiệm sofa Coastal.';
-
-  final List<Product> _products = [
-    Product(
-        name: 'Minimal Stand',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-  ];
 
   @override
   void initState() {
+    _controller.addListener(_onScroll);
     _pageController = PageController(viewportFraction: 1.0, initialPage: 0);
-
+    _getInfoProduct();
+    _getSimilarProducts();
     super.initState();
   }
 
+  void _getInfoProduct() {
+    ProductController.fetchProduct(id).then((dataFormServer) => {
+      setState(() {
+        _product = dataFormServer.product!;
+        listImage.add(dataFormServer.product!.imgUrl!);
+        for (var detailImg in dataFormServer.product!.listImageDetail!) {
+          listImage.add(detailImg.imgUrl!);
+        }
+        _enabled = !_enabled;
+      })
+    });
+  }
+
+  void _getSimilarProducts() {
+    _loading = true;
+    ProductController.fetchListSimilarProduct(page, limit, nameCategory).then((dataFromServer) => {
+      setState((){
+        _listProductSimilar.addAll(dataFromServer.products as Iterable<Product>);
+        totalPage = dataFromServer.totalPage!;
+        for(int i = 0; i < _listProductSimilar.length; i++){
+          if(_listProductSimilar[i].idProduct == id){
+            _listProductSimilar.removeAt(i);
+          }
+        }
+        _loading = false;
+      })
+    });
+  }
+
+  void _onScroll() {
+    if (!_controller.hasClients || _loading){
+      _canLoadMore = false;
+      return;
+    }
+
+    final thresholdReached =
+        _controller.position.extentAfter < _endReachedThreshold;
+
+    if (thresholdReached) {
+      if(page < totalPage){
+        page++;
+        _getSimilarProducts();
+      }
+    }
+  }
+
+  Future<void> _refresh() async {
+    _enabled = !_enabled;
+    _canLoadMore = true;
+    listImage.clear();
+    _listProductSimilar.clear();
+    page = 1;
+    _getInfoProduct();
+    _getSimilarProducts();
+    print('Refreshing...');
+  }
+
+
   Widget _buildProductItem(BuildContext context, int index) {
-    return ProductItem(_products[index]);
+    return ProductItem(_listProductSimilar[index]);
   }
 
   @override
@@ -72,309 +121,338 @@ class ProductScreenState extends State<ProductScreen> {
       title: 'Product Screen',
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-          body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                  leading: IconButton(
-                    icon: const SvgIcon(
-                      icon: SvgIconData('assets/icons/icon_back.svg'),
-                      color: Colors.black,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context, _products[0]);
-                    },
-                  ),
-                  backgroundColor: Colors.white,
-                  expandedHeight: 300.0,
-                  pinned: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Column(
-                      children: [
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            height: 250,
-                            child: PageView.builder(
-                              itemCount: images.length,
-                              pageSnapping: true,
+        body: RefreshIndicator(
+          onRefresh: _refresh,
+          child: Skeletonizer(
+              enabled: _enabled,
+            child: Stack(
+            children: [
+              CustomScrollView(
+                controller: _controller,
+                slivers: [
+                  SliverAppBar(
+                      leading: IconButton(
+                        icon: const SvgIcon(
+                          icon: SvgIconData('assets/icons/icon_back.svg'),
+                          color: Colors.black,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, _product);
+                        },
+                      ),
+                      backgroundColor: Colors.white,
+                      expandedHeight: 300.0,
+                      pinned: true,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: Column(
+                          children: [
+                            SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: 250,
+                                child: PageView.builder(
+                                  itemCount: listImage.length,
+                                  pageSnapping: true,
+                                  controller: _pageController,
+                                  itemBuilder: (context, pagePosition) {
+                                    return Container(
+                                        width: MediaQuery.of(context).size.width,
+                                        //margin: const EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                            //color: Colors.amber,
+                                            image: DecorationImage(
+                                                image: NetworkImage(
+                                                    listImage[pagePosition]),
+                                                fit: BoxFit.contain)));
+                                  },
+                                )),
+                            const SizedBox(
+                              width: 10,
+                              height: 10,
+                            ),
+                            listImage.isEmpty ?
+                             const SizedBox(
+                              width: 10,
+                              height: 10,
+                            ) : SmoothPageIndicator(
                               controller: _pageController,
-                              itemBuilder: (context, pagePosition) {
-                                return Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    //margin: const EdgeInsets.all(5),
-                                    decoration: BoxDecoration(
-                                        //color: Colors.amber,
-                                        image: DecorationImage(
-                                            image: AssetImage(
-                                                images[pagePosition]),
-                                            fit: BoxFit.contain)));
-                              },
-                            )),
-                        const SizedBox(
-                          width: 10,
-                          height: 10,
+                              count: listImage.length,
+                              effect: const ExpandingDotsEffect(
+                                  dotHeight: 2,
+                                  dotWidth: 6,
+                                  dotColor: Color(0xff999999),
+                                  activeDotColor: Color(0xff303030)),
+                            ),
+                          ],
                         ),
-                        SmoothPageIndicator(
-                          controller: _pageController,
-                          count: images.length,
-                          effect: const ExpandingDotsEffect(
-                              dotHeight: 2,
-                              dotWidth: 6,
-                              dotColor: Color(0xff999999),
-                              activeDotColor: Color(0xff303030)),
+                      )),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.all(10),
+                      child: Text(
+                        _product?.nameProduct ?? '',
+                        style: const TextStyle(
+                            fontFamily: 'Gelasio',
+                            fontWeight: FontWeight.w500,
+                            fontSize: 24,
+                            color: Color(0xff303030)),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 10),
+                      child: Text(
+                        NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                            .format(_product?.price ?? 0),
+                        style: const TextStyle(
+                            fontFamily: 'NunitoSans',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 30,
+                            color: Color(0xff303030)),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                      child: Container(
+                    margin: const EdgeInsets.only(left: 10),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            //print('mo danh gia' + this.name);
+                          },
+                          child: Row(children: [
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 30,
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              child: const Text(
+                                '4.5',
+                                style: TextStyle(
+                                    fontFamily: 'NunitoSans',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    color: Color(0xff303030)),
+                              ),
+                            ),
+                            Container(
+                              margin:
+                                  const EdgeInsets.only(top: 4, left: 4, right: 30),
+                              child: Text(
+                                '($review đánh giá)',
+                                style: const TextStyle(
+                                    fontFamily: 'NunitoSans',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 18,
+                                    color: Color(0xff808080)),
+                              ),
+                            ),
+                          ]),
                         ),
+                        //Nút tang giam so luong
+                        Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+                          Container(
+                              margin: const EdgeInsets.only(left: 10),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                  size: 30,
+                                  color: Color(0xff303030),
+                                ),
+                                onPressed: () {
+                                  if (quantity == 1) {
+                                    return;
+                                  }
+                                  setState(() {
+                                    quantity--;
+                                  });
+                                },
+                              )),
+                          Container(
+                            margin: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              quantity.toString(),
+                              style: const TextStyle(
+                                  fontFamily: 'Gelasio',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 20,
+                                  color: Color(0xff303030)),
+                            ),
+                          ),
+                          Container(
+                              margin: const EdgeInsets.only(left: 10),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                  size: 30,
+                                  color: Color(0xff303030),
+                                ),
+                                onPressed: () {
+                                  quantity++;
+                                  ProductController.checkQuantityProduct(id, quantity).then((dataFormServer) => {
+                                    if(dataFormServer.errCode != 0){
+                                      showAlertDialog(context, dataFormServer.errMessage!),
+                                    }else {
+                                      setState(() {
+                                        quantity;
+                                      })
+                                    }
+                                  });
+                                },
+                              )),
+                        ]),
                       ],
                     ),
                   )),
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.all(10),
-                  child: const Text(
-                    'Sofa Coastal 2 chỗ KD1085-18 xanh M2',
-                    style: TextStyle(
-                        fontFamily: 'Gelasio',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 24,
-                        color: Color(0xff303030)),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.only(left: 10),
-                  child: Text(
-                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                        .format(200000000),
-                    style: const TextStyle(
-                        fontFamily: 'NunitoSans',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 30,
-                        color: Color(0xff303030)),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                  child: Container(
-                margin: const EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        print('mo danh gia' + this.name);
-                      },
-                      child: Row(children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 30,
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          child: const Text(
-                            '4.5',
-                            style: TextStyle(
-                                fontFamily: 'NunitoSans',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                                color: Color(0xff303030)),
-                          ),
-                        ),
-                        Container(
-                          margin:
-                              const EdgeInsets.only(top: 4, left: 4, right: 30),
-                          child: Text(
-                            '($review đánh giá)',
+                  SliverToBoxAdapter(
+                    child: Container(
+                        margin: const EdgeInsets.only(left: 10, top: 20),
+                        child: Text('Kích thước: ${_product?.size ?? ''}',
                             style: const TextStyle(
                                 fontFamily: 'NunitoSans',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                                color: Color(0xff808080)),
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                                color: Color(0xff606060)))),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                        margin: const EdgeInsets.only(left: 10, top: 20),
+                        child: Text('Vật liệu: ${_product?.material ?? ''}',
+                            style: const TextStyle(
+                                fontFamily: 'NunitoSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                                color: Color(0xff606060)))),
+                  ),
+                  SliverToBoxAdapter(
+                      child: Container(
+                          margin: const EdgeInsets.only(left: 10, top: 20),
+                          child: ExpandableText(
+                            'Mô tả sản phẩm: \n${_product?.description ?? ''}',
+                            expandText: "Xem thêm",
+                            collapseText: 'Thu gọn',
+                            maxLines: 3,
+                            style: const TextStyle(
+                                fontFamily: 'NunitoSans',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                                color: Color(0xff606060)),
+                            linkColor: const Color(0xff242424),
+                          ))),
+                  SliverToBoxAdapter(
+                    child: _listProductSimilar.isNotEmpty
+                        ? Container(
+                            margin: const EdgeInsets.all(10),
+                            child: const Center(
+                              child: Text(
+                                'Sản phẩm tương tự',
+                                style: TextStyle(
+                                    fontFamily: 'Gelasio',
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 24,
+                                    color: Color(0xff303030)),
+                              ),
+                            ),
+                          )
+                        : const SizedBox(
+                            width: 70,
+                            height: 50,
+                          ),
+                  ),
+                  _listProductSimilar.isNotEmpty
+                      ? SliverPadding(
+                          padding: const EdgeInsets.all(10),
+                          sliver: SliverGrid(
+                            delegate: SliverChildBuilderDelegate(_buildProductItem,
+                                childCount: _listProductSimilar.length),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              childAspectRatio: 4 / 6,
+                            ),
+                          ),
+                        )
+                      : const SliverToBoxAdapter(
+                          child: SizedBox(
+                            width: 70,
+                            height: 50,
                           ),
                         ),
-                      ]),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(
+                      width: 70,
+                      height: 100,
                     ),
-                    Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                      Container(
-                          margin: const EdgeInsets.only(left: 10),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.remove_circle_outline,
-                              size: 30,
-                              color: Color(0xff303030),
-                            ),
-                            onPressed: () {
-                              if (quantity == 1) {
-                                return;
-                              }
-                              setState(() {
-                                quantity--;
-                              });
-                            },
-                          )),
-                      Container(
-                        margin: const EdgeInsets.only(left: 10),
-                        child: Text(
-                          quantity.toString(),
-                          style: const TextStyle(
-                              fontFamily: 'Gelasio',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 20,
-                              color: Color(0xff303030)),
-                        ),
-                      ),
-                      Container(
-                          margin: const EdgeInsets.only(left: 10),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.add_circle_outline,
-                              size: 30,
-                              color: Color(0xff303030),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                quantity++;
-                              });
-                            },
-                          )),
-                    ]),
-                  ],
-                ),
-              )),
-              SliverToBoxAdapter(
-                child: Container(
-                    margin: const EdgeInsets.only(left: 10, top: 20),
-                    child: Text('Kích thước: $size',
-                        style: const TextStyle(
-                            fontFamily: 'NunitoSans',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
-                            color: Color(0xff606060)))),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                    margin: const EdgeInsets.only(left: 10, top: 20),
-                    child: Text('Vật liệu: $material',
-                        style: const TextStyle(
-                            fontFamily: 'NunitoSans',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
-                            color: Color(0xff606060)))),
-              ),
-              SliverToBoxAdapter(
-                  child: Container(
-                      margin: const EdgeInsets.only(left: 10, top: 20),
-                      child: ExpandableText(
-                        'Mô tả sản phẩm: \n$des',
-                        expandText: "Xem thêm",
-                        collapseText: 'Thu gọn',
-                        maxLines: 3,
-                        style: const TextStyle(
-                            fontFamily: 'NunitoSans',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16,
-                            color: Color(0xff606060)),
-                        linkColor: const Color(0xff242424),
-                      ))),
-              SliverToBoxAdapter(
-                child: _products.isNotEmpty
-                    ? Container(
-                        margin: const EdgeInsets.all(10),
-                        child: const Center(
-                          child: Text(
-                            'Sản phẩm tương tự',
-                            style: TextStyle(
-                                fontFamily: 'Gelasio',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 24,
-                                color: Color(0xff303030)),
-                          ),
-                        ),
-                      )
-                    : const SizedBox(
-                        width: 70,
-                        height: 50,
-                      ),
-              ),
-              _products.isNotEmpty
-                  ? SliverPadding(
-                      padding: const EdgeInsets.all(10),
-                      sliver: SliverGrid(
-                        delegate: SliverChildBuilderDelegate(_buildProductItem,
-                            childCount: _products.length),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          childAspectRatio: 4 / 6,
-                        ),
-                      ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _canLoadMore
+                        ? Container(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
                     )
-                  : const SliverToBoxAdapter(
-                      child: SizedBox(
-                        width: 70,
-                        height: 50,
+                        : const SizedBox(),
+                  ),
+                ],
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: const BoxDecoration(
+                          color: Color(0xffF0F0F0),
+                        ),
+                        child: IconButton(
+                            onPressed: () {
+                              // int a = products.length;
+                              // print('$a');
+                              // showAlertDialog(
+                              //     context, 'Đã thêm vào sản phẩm yêu thích.');
+                            },
+                            icon: const SvgIcon(
+                                icon: SvgIconData('assets/icons/icon_mark.svg'))),
                       ),
-                    ),
-              const SliverToBoxAdapter(
-                child: SizedBox(
-                  width: 70,
-                  height: 100,
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                      ),
+                      Expanded(
+                          child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(250, 60),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8))),
+                        child: const Text('Thêm vào giỏ hàng',
+                            style: TextStyle(
+                                fontFamily: 'NunitoSans',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20)),
+                        onPressed: () {
+                          showAlertDialog(context, 'Đã thêm vào giỏ hàng');
+                        },
+                      )),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: const BoxDecoration(
-                      color: Color(0xffF0F0F0),
-                    ),
-                    child: IconButton(
-                        onPressed: () {
-                          int a = products.length;
-                          print('$a');
-                          showAlertDialog(
-                              context, 'Đã thêm vào sản phẩm yêu thích.');
-                        },
-                        icon: const SvgIcon(
-                            icon: SvgIconData('assets/icons/icon_mark.svg'))),
-                  ),
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                  ),
-                  Expanded(
-                      child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(250, 60),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8))),
-                    child: const Text('Thêm vào giỏ hàng',
-                        style: TextStyle(
-                            fontFamily: 'NunitoSans',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20)),
-                    onPressed: () {
-                      showAlertDialog(context, 'Đã thêm vào giỏ hàng');
-                    },
-                  )),
-                ],
-              ),
-            ),
           ),
-        ],
-      )),
+        ),
+      ),
     );
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/item_cart.dart';
-import 'package:furniture_mcommerce_app/models/shipping_address.dart';
+import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';

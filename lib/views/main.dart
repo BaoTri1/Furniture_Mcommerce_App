@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:furniture_mcommerce_app/views/screens/cart_screen/cart_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/favorites_screen/favorites_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/home_screen.dart';
@@ -10,7 +15,7 @@ import 'package:furniture_mcommerce_app/views/screens/search_screen/search_scree
 //import 'package:furniture_mcommerce_app/views/screens/home_screen/home_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/signup_screen/signup_screen.dart';
-//import 'package:furniture_mcommerce_app/views/screens/boarding_screen/boarding_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/boarding_screen/boarding_screen.dart';
 //import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
 
 void main() {
@@ -35,7 +40,7 @@ class MyApp extends StatelessWidget {
           '/cart': (context) => const CartScreen(),
           '/search': (context) => const SearchScreen()
         },
-        home: const MainScreen());
+        home: const LoginScreen());
   }
 }
 
@@ -49,7 +54,49 @@ class MainScreen extends StatefulWidget {
 }
 
 class MainScreenState extends State<MainScreen> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late SharedPreferences pref;
   int _selectedIndex = 0;
+
+  late StreamSubscription subscription;
+  var isDeviceConnected = false;
+  bool isAlertSet = false;
+
+  @override
+  void initState() {
+    getConnectivity();
+    checkFirstInstall();
+    super.initState();
+  }
+
+  Future<void> checkFirstInstall() async {
+    pref = await _prefs;
+    final result = pref.getBool('FirstInstall') ?? true;
+    if(result){
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => BoardingScreen()));
+    }
+  }
+
+  void  getConnectivity() {
+    print('object');
+    subscription = Connectivity().onConnectivityChanged.listen(
+            (ConnectivityResult result) async {
+          isDeviceConnected = await InternetConnectionChecker().hasConnection;
+          if (!isDeviceConnected && isAlertSet == false) {
+            showDialogBox();
+            setState(() {
+              isAlertSet = true;
+            });
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
+  }
 
   List<Widget> screenList = [
     const HomeScreen(),
@@ -57,6 +104,7 @@ class MainScreenState extends State<MainScreen> {
     const NotificationScreen(),
     const ProfileScreen()
   ];
+
 
   @override
   Widget build(BuildContext context) {
@@ -106,4 +154,36 @@ class MainScreenState extends State<MainScreen> {
       ),
     );
   }
+
+  showDialogBox() => showDialog<String>(
+    context: context,
+    builder: (BuildContext context) => Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Không có kết nối mạng. Kiểm tra lại kết nối của bạn.'),
+            const SizedBox(height: 15,),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                setState(() {
+                  isAlertSet = false;
+                });
+                isDeviceConnected = await InternetConnectionChecker().hasConnection;
+                if(!isDeviceConnected){
+                  showDialogBox();
+                  setState(() {
+                    isAlertSet = false;
+                  });
+                }
+              },
+              child: const Text('OK'),)
+          ],
+        ),
+      ),
+    )
+  );
 }

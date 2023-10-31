@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/models/product.dart';
+import 'package:furniture_mcommerce_app/models/test/product.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -121,12 +121,12 @@ class FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildItemFavorite(BuildContext context, int index) {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
-            builder: (_) => ProductScreen(
-                  name: _products[index].name,
-                )));
-      },
+      // onTap: () {
+      //   Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+      //       builder: (_) => ProductScreen(
+      //             name: _products[index].name,
+      //           )));
+      // },
       child: Stack(
         children: [
           SizedBox(

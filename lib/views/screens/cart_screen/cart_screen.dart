@@ -179,12 +179,12 @@ class CartScreenState extends State<CartScreen> {
 
   Widget _buildItemCart(BuildContext context, int index) {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
-            builder: (_) => ProductScreen(
-                  name: _listItem[index].name,
-                )));
-      },
+      // onTap: () {
+      //   Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+      //       builder: (_) => ProductScreen(
+      //             name: _listItem[index].name,
+      //           )));
+      // },
       child: Stack(
         children: [
           SizedBox(

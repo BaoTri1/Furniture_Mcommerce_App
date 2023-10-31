@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/controllers/address_controller/product_controller.dart';
+import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/list_category.dart';
-
-import '../../../models/product.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +19,11 @@ class HomeScreenState extends State<HomeScreen> {
   final List<Product> _products = [];
   bool _loading = true;
   bool _canLoadMore = true;
+  int _page = 1;
+  final int _limit = 20;
+  late int _totalPage;
+
+  final ScrollController _controller = ScrollController();
 
   @override
   void initState() {
@@ -28,32 +33,39 @@ class HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  final ScrollController _controller = ScrollController();
-
-  Future<void> _getProducts() async {
+  void _getProducts() {
     _loading = true;
-    final newProducts = await getProduct();
-    setState(() {
-      _products.addAll(newProducts);
+    ProductController.fetchListProduct(_page, _limit).then((dataFormServer) => {
+      setState(() {
+          _totalPage = dataFormServer.totalPage!;
+          _products.addAll(dataFormServer.products as Iterable<Product>);
+          _loading = false;
+      })
     });
-    _loading = false;
   }
 
   void _onScroll() {
-    if (!_controller.hasClients || _loading) return;
+    if (!_controller.hasClients || _loading){
+      _canLoadMore = false;
+      return;
+    }
 
     final thresholdReached =
         _controller.position.extentAfter < _endReachedThreshold;
 
     if (thresholdReached) {
-      _getProducts();
+      if(_page < _totalPage){
+        _page++;
+        _getProducts();
+      }
     }
   }
 
   Future<void> _refresh() async {
     _canLoadMore = true;
     _products.clear();
-    await _getProducts();
+    _page = 1;
+    _getProducts();
     print('Refreshing...');
   }
 
@@ -162,10 +174,10 @@ class HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: _canLoadMore
                     ? Container(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        alignment: Alignment.center,
-                        child: const CircularProgressIndicator(),
-                      )
+                  padding: const EdgeInsets.only(bottom: 16),
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                )
                     : const SizedBox(),
               ),
             ],

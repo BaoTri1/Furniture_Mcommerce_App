@@ -11,22 +11,25 @@ class FurnitureShopDatabase {
   static const String NAME_TABLE_ITEMS_CART = 'ItemsCart';
   static const String NAME_TABLE_ITEMS_FAVORITES = 'ItemsFavorites';
   static const String NAME_TABLE_SHIPPING_ADDRESS = 'ShippingAddress';
+  static const String NAME_TABLE_CREDIT = 'Credit';
 
   static Future getInstance() async {
     _database ??=
         await openDatabase(join(await getDatabasesPath(), NAME_DATABASE),
             onCreate: (db, version) async {
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_ACCOUNT(id INTEGER PRIMARY KEY, sdt TEXT, passwd TEXT, isLogin INTEGER)");
+          "CREATE TABLE $NAME_TABLE_ACCOUNT(id INTEGER PRIMARY KEY, idUser TEXT, sdt TEXT, passwd TEXT, isLogin INTEGER, token TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_HISTORY_SEARCH(id INTEGER PRIMARY KEY, id_user TEXT, text TEXT)");
+          "CREATE TABLE $NAME_TABLE_HISTORY_SEARCH(id INTEGER PRIMARY KEY, idUser TEXT, text TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_ITEMS_CART(id INTEGER PRIMARY KEY, id_user TEXT, name TEXT, price REAL, quantity INTEGER, urlImg TEXT)");
+          "CREATE TABLE $NAME_TABLE_ITEMS_CART(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, name TEXT, price REAL, quantity INTEGER, urlImg TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_ITEMS_FAVORITES(id INTEGER PRIMARY KEY, id_user TEXT, name TEXT, urlImg TEXT)");
+          "CREATE TABLE $NAME_TABLE_ITEMS_FAVORITES(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, name TEXT, price REAL, urlImg TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_SHIPPING_ADDRESS(id INTEGER PRIMARY KEY, id_user TEXT, name TEXT, sdt TEXT, address TEXT, isDefault INTEGER)");
-    }, version: 2);
+          "CREATE TABLE $NAME_TABLE_SHIPPING_ADDRESS(id INTEGER PRIMARY KEY, idUser TEXT, name TEXT, sdt TEXT, address TEXT, isDefault INTEGER)");
+      await db.execute(
+          "CREATE TABLE $NAME_TABLE_CREDIT(id INTEGER PRIMARY KEY, idUser TEXT, numberCredit TEXT, name TEXT, month TEXT, year TEXT)");
+    }, version: 5);
     return _database!;
   }
 }

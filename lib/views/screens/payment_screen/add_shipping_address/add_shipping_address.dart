@@ -4,7 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/district.dart';
 import 'package:furniture_mcommerce_app/models/province.dart';
-import 'package:furniture_mcommerce_app/models/shipping_address.dart';
+import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
 import 'package:furniture_mcommerce_app/models/ward.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_district.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_province.dart';
