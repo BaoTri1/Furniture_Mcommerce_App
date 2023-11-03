@@ -1,9 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/controllers/otherservice_controller.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/models/item_pay.dart';
+import 'package:furniture_mcommerce_app/models/methodshipping.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
-class SelectPay extends StatelessWidget {
+import '../../../../models/methodpayment.dart';
+
+class SelectPay extends StatefulWidget {
   const SelectPay({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return SelectPayState();
+  }
+}
+
+class SelectPayState extends State<SelectPay> {
+
+  late List<Methodpayment> _list = [];
+  bool _enabled = true;
+
+  @override
+  void initState() {
+    _getListMethodPayment();
+      super.initState();
+  }
+
+  void _getListMethodPayment() async {
+      String token = await AccountHandler.getToken();
+      if(token.isEmpty) return;
+      OtherServiceController.fetchListMethodPayment(token).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+          setState((){
+              _list = dataFormServer.methodpayments!;
+              _enabled = !_enabled;
+          })
+        }
+      });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +66,12 @@ class SelectPay extends StatelessWidget {
           },
         ),
       ),
-      body: ListView.builder(
-        itemBuilder: _buildItemPay,
-        itemCount: _listPay.length,
+      body: Skeletonizer(
+        enabled: _enabled,
+        child: ListView.builder(
+          itemBuilder: _buildItemPay,
+          itemCount: _list.length,
+        ),
       ),
     );
   }
@@ -42,7 +81,7 @@ class SelectPay extends StatelessWidget {
       margin: const EdgeInsets.only(top: 10),
       child: GestureDetector(
         onTap: () {
-          Navigator.pop(context);
+          Navigator.pop(context, _list[index]);
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
@@ -61,14 +100,14 @@ class SelectPay extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.all(10),
                     child: SvgIcon(
-                      icon: SvgIconData(_listPay[index].icon),
+                      icon: SvgIconData(_list[index].iconPayment!),
                       size: 35,
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.all(10),
                     child: Text(
-                      _listPay[index].name,
+                      _list[index].namePayment!,
                       style: const TextStyle(
                           fontFamily: 'NunitoSans',
                           fontWeight: FontWeight.w400,
@@ -85,8 +124,6 @@ class SelectPay extends StatelessWidget {
     );
   }
 }
-
-class $ {}
 
 List<ItemPay> _listPay = [
   ItemPay(

@@ -1,72 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
-import 'package:furniture_mcommerce_app/models/item_cart.dart';
 import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
+import 'package:furniture_mcommerce_app/models/methodpayment.dart';
+import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_ship/select_ship_screen.dart';
 import 'package:intl/intl.dart';
 
+import '../../../local_store/db/account_handler.dart';
+import '../../../models/localstore/itemcart.dart';
+
+// ignore: must_be_immutable
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  PaymentScreen({super.key, required this.list});
+
+  List<ItemCart> list;
 
   @override
   State<StatefulWidget> createState() {
-    return PaymentScreenState();
+    // ignore: no_logic_in_create_state
+    return PaymentScreenState(list: list);
   }
 }
 
 class PaymentScreenState extends State<PaymentScreen> {
-  final List<ItemCart> _listItem = [
-    ItemCart(
-        id: 1,
-        id_user: 'U01',
-        name: 'Bàn 1',
-        quantity: 2,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 2,
-        id_user: 'U01',
-        name: 'Bàn 2',
-        quantity: 1,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 3,
-        id_user: 'U01',
-        name: 'Bàn 3',
-        quantity: 1,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 4,
-        id_user: 'U01',
-        name: 'Bàn 4',
-        quantity: 3,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 5,
-        id_user: 'U01',
-        name: 'Bàn 5',
-        quantity: 2,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-  ];
+  PaymentScreenState({required this.list});
+  List<ItemCart> list;
+
+  Methodpayment _methodpayment = Methodpayment();
+  Methodshinpping _methodshinpping = Methodshinpping();
 
   ShippingAddress? shippingAddress;
 
   @override
   void initState() {
-    ShippingAddressHandler.getItemShippingAddressDefault('U01').then((data) => {
-      shippingAddress = data
-    });
+    _getShippingAddressDefault();
     print('name: ${shippingAddress?.name}, address: ${shippingAddress?.address}');
     super.initState();
   }
+
+  void _getShippingAddressDefault() async {
+    String idUser = await AccountHandler.getIdUser();
+    print(idUser);
+    if(idUser.isEmpty) return;
+    if(await ShippingAddressHandler.countItem(idUser) > 0){
+      print('true');
+      ShippingAddressHandler.getItemShippingAddressDefault(idUser).then((data) => {
+        setState((){
+          shippingAddress = data;
+          print('${shippingAddress!.name} + ${shippingAddress!.sdt} + ${shippingAddress!.address} ');
+
+        })
+      });
+    }
+
+  }
+
+  double totalOrder(){
+    double total = 0;
+    for(var item in list){
+      total += item.price * item.quantity;
+    }
+    return total;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +98,7 @@ class PaymentScreenState extends State<PaymentScreen> {
         ),
         body: CustomScrollView(
           slivers: [
+            //lable: địa chỉ giao hàng và btn edit
             SliverToBoxAdapter(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,12 +117,16 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10),
                     child: IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ShippingAddressScreen()));
+                        onPressed: () async {
+                            final resultShippingAddress = await Navigator.of(context, rootNavigator: true).push(
+                                MaterialPageRoute(builder: (_) => const ShippingAddressScreen())
+                            );
+                            if(resultShippingAddress != null){
+                              setState(() {
+                                  shippingAddress = resultShippingAddress;
+                              });
+                            }
+                            print('${shippingAddress!.name} + ${shippingAddress!.sdt} + ${shippingAddress!.address} ');
                         },
                         icon: const SvgIcon(
                             icon: SvgIconData('assets/icons/icon_edit.svg'))),
@@ -129,6 +134,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ],
               ),
             ),
+            //widget hiển thị địa chỉ
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -148,9 +154,10 @@ class PaymentScreenState extends State<PaymentScreen> {
                       children: [
                         Container(
                           margin: const EdgeInsets.all(10),
-                          child: const Text(
-                            'Phạm Bảo Trí | SĐT: 0123456789',
-                            style: TextStyle(
+                          child: Text(
+                           shippingAddress?.name == null ? 'Chọn địa chỉ giao hàng của bạn.'
+                               : '${shippingAddress?.name} | ${shippingAddress?.sdt}',
+                            style: const TextStyle(
                                 fontFamily: 'NunitoSans',
                                 fontWeight: FontWeight.w700,
                                 fontSize: 18,
@@ -162,23 +169,24 @@ class PaymentScreenState extends State<PaymentScreen> {
                           width: 335,
                           color: const Color(0xffF0F0F0),
                         ),
-                        Container(
+                        shippingAddress?.address != null ? Container(
                           margin: const EdgeInsets.all(10),
-                          child: const Text(
-                            '25 rue Robert Latouche, Nice, 06200, Côte D’azur, France',
-                            style: TextStyle(
+                          child: Text(
+                            shippingAddress?.address ?? '',
+                            style: const TextStyle(
                                 fontFamily: 'NunitoSans',
                                 fontWeight: FontWeight.w400,
                                 fontSize: 14,
                                 color: Color(0xff808080)),
                           ),
-                        ),
+                        ) : const SizedBox(),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
+            //lable: danh sách sản phẩm
             SliverToBoxAdapter(
               child: Container(
                 margin: const EdgeInsets.only(left: 5, top: 10),
@@ -192,6 +200,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
+            //Widget danh sách sản phẩm
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
@@ -212,11 +221,12 @@ class PaymentScreenState extends State<PaymentScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemBuilder: _buildItemProduct,
-                        itemCount: _listItem.length,
+                        itemCount: list.length,
                       )),
                 ),
               ),
             ),
+            //lable: mã giảm giá và btn edit
             SliverToBoxAdapter(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -244,6 +254,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ],
               ),
             ),
+            //Widget hiển thị giảm giá
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -275,6 +286,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
+            //lable: phương thức thanh toán và btn edit
             SliverToBoxAdapter(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -293,11 +305,16 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10, top: 20),
                     child: IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SelectPay()));
+                        onPressed: () async {
+                         final resultPayment = await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SelectPay())
+                         );
+                         if(resultPayment != null){
+                            setState(() {
+                              _methodpayment = resultPayment as Methodpayment;
+                            });
+                            print('${_methodpayment.idPayment} + ${_methodpayment.namePayment} + ${_methodpayment.iconPayment}');
+                         }
                         },
                         icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_edit.svg'),
@@ -307,6 +324,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ],
               ),
             ),
+            //Widget hiển thị phương thức thanh toán
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -327,16 +345,17 @@ class PaymentScreenState extends State<PaymentScreen> {
                       margin: const EdgeInsets.all(10),
                       child: Row(
                         children: [
-                          const SvgIcon(
-                            icon: SvgIconData(
-                                'assets/icons/icon_paying_by_cash.svg'),
-                            size: 35,
-                          ),
+                          _methodpayment.iconPayment == null ? const SizedBox()
+                              : SvgIcon(
+                                  icon: SvgIconData(
+                                      _methodpayment.iconPayment ?? ''),
+                                  size: 35,
+                                ),
                           Container(
                             margin: const EdgeInsets.only(left: 10),
-                            child: const Text(
-                              'Thanh toán trực tiếp khi nhận hàng.',
-                              style: TextStyle(
+                            child: Text(
+                              _methodpayment.namePayment ?? 'Chọn phương thức thanh toán.',
+                              style: const TextStyle(
                                   fontFamily: 'NunitoSans',
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
@@ -345,19 +364,12 @@ class PaymentScreenState extends State<PaymentScreen> {
                           )
                         ],
                       ),
-                      // child: const Text(
-                      //   'Chọn phương thức thanh toán',
-                      //   style: TextStyle(
-                      //       fontFamily: 'NunitoSans',
-                      //       fontWeight: FontWeight.w700,
-                      //       fontSize: 16,
-                      //       color: Color(0xff303030)),
-                      // ),
                     ),
                   ),
                 ),
               ),
             ),
+            //lable: phương thức vận chuyển và btn edit
             SliverToBoxAdapter(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -376,11 +388,16 @@ class PaymentScreenState extends State<PaymentScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 10, top: 20),
                     child: IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SelectShip()));
+                        onPressed: () async {
+                          final resultShipping = await Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const SelectShip())
+                          );
+                          if(resultShipping != null){
+                            setState(() {
+                              _methodshinpping = resultShipping as Methodshinpping;
+                            });
+                            print('${_methodshinpping.idShipment} + ${_methodshinpping.nameShipment} + ${_methodshinpping.iconShipment}');
+                          }
                         },
                         icon: const SvgIcon(
                           icon: SvgIconData('assets/icons/icon_edit.svg'),
@@ -390,6 +407,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ],
               ),
             ),
+            //Widget hiển thị phương thức vận chuyển
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -410,16 +428,17 @@ class PaymentScreenState extends State<PaymentScreen> {
                       margin: const EdgeInsets.all(10),
                       child: Row(
                         children: [
-                          const SvgIcon(
-                            icon: SvgIconData(
-                                'assets/icons/icon_fast_delivery.svg'),
-                            size: 35,
-                          ),
+                          _methodshinpping.iconShipment == null ? const SizedBox()
+                              : SvgIcon(
+                                  icon: SvgIconData(
+                                      _methodshinpping.iconShipment ?? ''),
+                                  size: 35,
+                                ),
                           Container(
                             margin: const EdgeInsets.only(left: 10),
-                            child: const Text(
-                              'Giao hàng nhanh (2-3 ngày)',
-                              style: TextStyle(
+                            child: Text(
+                              _methodshinpping.nameShipment ?? 'Chọn phương thức vận chuyển.',
+                              style: const TextStyle(
                                   fontFamily: 'NunitoSans',
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
@@ -428,19 +447,12 @@ class PaymentScreenState extends State<PaymentScreen> {
                           )
                         ],
                       ),
-                      // child: const Text(
-                      //   'Chọn phương thức thanh toán',
-                      //   style: TextStyle(
-                      //       fontFamily: 'NunitoSans',
-                      //       fontWeight: FontWeight.w700,
-                      //       fontSize: 16,
-                      //       color: Color(0xff303030)),
-                      // ),
                     ),
                   ),
                 ),
               ),
             ),
+            //Widget hiển thị thanh toán
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 30),
@@ -480,7 +492,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                                 child: Text(
                                   NumberFormat.currency(
                                           locale: 'vi_VN', symbol: '₫')
-                                      .format(20000000),
+                                      .format(totalOrder()),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -509,7 +521,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                                 child: Text(
                                   NumberFormat.currency(
                                           locale: 'vi_VN', symbol: '₫')
-                                      .format(20000),
+                                      .format(_methodshinpping.fee ?? 0),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -538,7 +550,9 @@ class PaymentScreenState extends State<PaymentScreen> {
                                 child: Text(
                                   NumberFormat.currency(
                                           locale: 'vi_VN', symbol: '₫')
-                                      .format(20020000),
+                                      .format(
+                                            _methodshinpping.fee == null ? totalOrder()
+                                                : (totalOrder() + _methodshinpping.fee!.toDouble())),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -555,6 +569,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
+            //Widget nút thanh toán
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -595,8 +610,8 @@ class PaymentScreenState extends State<PaymentScreen> {
           height: 100,
           margin: const EdgeInsets.all(10),
           child: Card(
-            child: Image.asset(
-              _listItem[index].urlImg,
+            child: Image.network(
+              list[index].urlImg,
               fit: BoxFit.contain,
             ),
           ),
@@ -604,21 +619,26 @@ class PaymentScreenState extends State<PaymentScreen> {
         Positioned(
           top: 20,
           left: 120,
-          child: Text(
-            _listItem[index].name,
-            style: const TextStyle(
-                fontFamily: 'NunitoSans',
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: Color(0xff606060)),
+          child: SizedBox(
+            width: 200,
+            child: Text(
+              list[index].name,
+              style: const TextStyle(
+                  fontFamily: 'NunitoSans',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Color(0xff606060)),
+              softWrap: true,
+              overflow: TextOverflow.clip,
+            ),
           ),
         ),
         Positioned(
-          top: 50,
+          top: 80,
           left: 120,
           child: Text(
             NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                .format(_listItem[index].price),
+                .format(list[index].price),
             style: const TextStyle(
                 fontFamily: 'NunitoSans',
                 fontWeight: FontWeight.w700,
@@ -630,7 +650,7 @@ class PaymentScreenState extends State<PaymentScreen> {
           top: 10,
           right: 15,
           child: Text(
-            'x${_listItem[index].quantity}',
+            'x${list[index].quantity}',
             style: const TextStyle(
                 fontFamily: 'NunitoSans',
                 fontWeight: FontWeight.w400,

@@ -40,7 +40,7 @@ class AccountHandler {
   static Future<bool> checkAccountforDatabase() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [0]);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [1]);
 
     if (maps.isNotEmpty) {
       return true;
@@ -51,7 +51,7 @@ class AccountHandler {
   static Future<bool> checkIsLogin() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [0]);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [1]);
 
     if (maps.isNotEmpty) {
       if(maps[0]['isLogin'] == 1){
@@ -65,7 +65,7 @@ class AccountHandler {
   static Future<Account> getAccount() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [0]);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [1]);
 
     Account account = Account(id: 0, idUser: '', sdt: '', passwd: '', isLogin: 0, token: '');
     if (maps.isNotEmpty) {
@@ -83,7 +83,7 @@ class AccountHandler {
   static Future<String> getToken() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [0]);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [1]);
 
     String token = '';
     if (maps.isNotEmpty) {
@@ -95,7 +95,7 @@ class AccountHandler {
   static Future<String> getIdUser() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
-    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [0]);
+    await db.query(FurnitureShopDatabase.NAME_TABLE_ACCOUNT, where: 'id = ?', whereArgs: [1]);
 
     String idUser = '';
     if (maps.isNotEmpty) {
@@ -108,7 +108,7 @@ class AccountHandler {
     Database db = await FurnitureShopDatabase.getInstance();
     return await db.update(
         FurnitureShopDatabase.NAME_TABLE_ACCOUNT, item.toMap(),
-        where: 'id = ? and id_user = ?', whereArgs: [item.id, item.idUser]);
+        where: 'id = ? and idUser = ?', whereArgs: [item.id, item.idUser]);
   }
 
   static Future<int> setStateLogin(int id, int isLogin, String token) async {
@@ -118,13 +118,6 @@ class AccountHandler {
         where: 'id = ?', whereArgs: [id]);
   }
 
-  // static Future<int> setToken(int id, String token) async {
-  //   Database db = await FurnitureShopDatabase.getInstance();
-  //   return await db.update(
-  //       FurnitureShopDatabase.NAME_TABLE_ACCOUNT,{'token' : token},
-  //       where: 'id = ?', whereArgs: [id]);
-  // }
-
   static Future<void> deleteAll() async {
     Database db = await FurnitureShopDatabase.getInstance();
     await db.delete(FurnitureShopDatabase.NAME_TABLE_ACCOUNT);
@@ -133,7 +126,7 @@ class AccountHandler {
   static Future<int> deleteItemAccount(int id, String id_user) async {
     Database db = await FurnitureShopDatabase.getInstance();
     return await db.delete(FurnitureShopDatabase.NAME_TABLE_ACCOUNT,
-        where: 'id = ? AND id_user = ?', whereArgs: [id, id_user]);
+        where: 'id = ? AND idUser = ?', whereArgs: [id, id_user]);
   }
 
   static Future close() async {

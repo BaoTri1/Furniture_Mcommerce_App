@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/models/item_cart.dart';
+import 'package:furniture_mcommerce_app/controllers/product_controller.dart';
+import 'package:furniture_mcommerce_app/local_store/db/itemcart_handler.dart';
+import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/payment_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../../local_store/db/account_handler.dart';
+import '../../../models/localstore/itemcart.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -15,62 +21,34 @@ class CartScreen extends StatefulWidget {
 }
 
 class CartScreenState extends State<CartScreen> {
+
+  late List<ItemCart> _list = [];
+  late String idUser;
   int quantity = 1;
   double total = 0;
 
-  final List<ItemCart> _listItem = [
-    ItemCart(
-        id: 1,
-        id_user: 'U01',
-        name: 'Bàn 1',
-        quantity: 2,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 2,
-        id_user: 'U01',
-        name: 'Bàn 2',
-        quantity: 1,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 3,
-        id_user: 'U01',
-        name: 'Bàn 3',
-        quantity: 1,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 4,
-        id_user: 'U01',
-        name: 'Bàn 4',
-        quantity: 3,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-    ItemCart(
-        id: 5,
-        id_user: 'U01',
-        name: 'Bàn 5',
-        quantity: 2,
-        price: 20000000,
-        urlImg: 'assets/images/img_sofa.jpg'),
-  ];
-
-  double _totalPrice() {
-    _listItem.forEach((element) {
-      total += (element.price * element.quantity);
-    });
-    return total;
-  }
-
   @override
   void initState() {
-    _totalPrice();
+    _getListItemCart();
     super.initState();
+  }
+
+  void _getListItemCart() async {
+    idUser = await AccountHandler.getIdUser();
+    if(idUser.isEmpty) return;
+    ItemCartHandler.getListItemCart(idUser).then((list) => {
+      setState((){
+        _list.addAll(list);
+      }),
+      for (var item in list) {
+          total += (item.price * item.quantity)
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final itemCartState = Provider.of<ProviderItemCart>(context, listen: true);
     return MaterialApp(
       title: 'Cart Screen',
       debugShowCheckedModeBanner: false,
@@ -97,14 +75,14 @@ class CartScreenState extends State<CartScreen> {
               },
             ),
           ),
-          body: _listItem.isNotEmpty
+          body: itemCartState.getCountItemCart > 0
               ? Stack(
                   children: [
                     CustomScrollView(
                       slivers: [
                         SliverList.builder(
                           itemBuilder: _buildItemCart,
-                          itemCount: _listItem.length,
+                          itemCount: _list.length,
                         ),
                         const SliverToBoxAdapter(
                           child: SizedBox(
@@ -166,7 +144,7 @@ class CartScreenState extends State<CartScreen> {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => PaymentScreen()));
+                                        builder: (context) => PaymentScreen(list: _list,)));
                               },
                             ),
                           ),
@@ -178,6 +156,7 @@ class CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildItemCart(BuildContext context, int index) {
+    final itemCartState = Provider.of<ProviderItemCart>(context, listen: false);
     return GestureDetector(
       // onTap: () {
       //   Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
@@ -196,8 +175,8 @@ class CartScreenState extends State<CartScreen> {
             height: 100,
             margin: const EdgeInsets.all(10),
             child: Card(
-              child: Image.asset(
-                _listItem[index].urlImg,
+              child: Image.network(
+                _list[index].urlImg,
                 fit: BoxFit.contain,
               ),
             ),
@@ -205,21 +184,26 @@ class CartScreenState extends State<CartScreen> {
           Positioned(
             top: 20,
             left: 120,
-            child: Text(
-              _listItem[index].name,
-              style: const TextStyle(
-                  fontFamily: 'NunitoSans',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: Color(0xff606060)),
+            child: SizedBox(
+              width: 220,
+              child: Text(
+                _list[index].name,
+                style: const TextStyle(
+                    fontFamily: 'NunitoSans',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xff606060)),
+                softWrap: true,
+                overflow: TextOverflow.clip,
+              ),
             ),
           ),
           Positioned(
-            top: 50,
+            top: 60,
             left: 120,
             child: Text(
               NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                  .format(_listItem[index].price),
+                  .format(_list[index].price),
               style: const TextStyle(
                   fontFamily: 'NunitoSans',
                   fontWeight: FontWeight.w700,
@@ -234,15 +218,17 @@ class CartScreenState extends State<CartScreen> {
                 icon: const SvgIcon(
                     icon: SvgIconData('assets/icons/icon_delete.svg')),
                 onPressed: () {
+                  ItemCartHandler.deleteItemCart(_list[index].idProduct, idUser);
                   setState(() {
                     total -=
-                        (_listItem[index].price * _listItem[index].quantity);
-                    _listItem.removeAt(index);
+                        (_list[index].price * _list[index].quantity);
+                    _list.removeAt(index);
                   });
+                  itemCartState.reloadCountItemCart();
                 },
               )),
           Positioned(
-            top: 70,
+            top: 85,
             left: 100,
             child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
               Container(
@@ -254,20 +240,25 @@ class CartScreenState extends State<CartScreen> {
                       color: Color(0xff808080),
                     ),
                     onPressed: () {
-                      if (_listItem[index].quantity == 1) {
+                      if (_list[index].quantity == 1) {
                         return;
                       }
+                      ItemCartHandler.updateQuantityItemCart(
+                          _list[index].idProduct,
+                          idUser,
+                          _list[index].quantity - 1
+                      );
                       setState(() {
-                        _listItem[index].quantity =
-                            _listItem[index].quantity - 1;
-                        total -= _listItem[index].price;
+                        _list[index].quantity =
+                            _list[index].quantity - 1;
+                        total -= _list[index].price;
                       });
                     },
                   )),
               Container(
                 margin: const EdgeInsets.only(left: 10),
                 child: Text(
-                  _listItem[index].quantity.toString(),
+                  _list[index].quantity.toString(),
                   style: const TextStyle(
                       fontFamily: 'Gelasio',
                       fontWeight: FontWeight.w400,
@@ -284,17 +275,29 @@ class CartScreenState extends State<CartScreen> {
                       color: Color(0xff808080),
                     ),
                     onPressed: () {
-                      setState(() {
-                        _listItem[index].quantity =
-                            _listItem[index].quantity + 1;
-                        total += _listItem[index].price;
+                      ProductController.checkQuantityProduct(_list[index].idProduct, _list[index].quantity + 1)
+                          .then((dataFormServer) => {
+                            if(dataFormServer.errCode == 0){
+                                ItemCartHandler.updateQuantityItemCart(
+                                    _list[index].idProduct,
+                                    idUser,
+                                    _list[index].quantity + 1
+                                ),
+                                setState(() {
+                                  _list[index].quantity =
+                                      _list[index].quantity + 1;
+                                  total += _list[index].price;
+                                })
+                            }else{
+                              showDialogBox('Thông báo', dataFormServer.errMessage!)
+                            }
                       });
                     },
                   )),
             ]),
           ),
           Positioned(
-              top: 110,
+              top: 125,
               right: 55,
               child: Center(
                 child: Container(
@@ -333,5 +336,42 @@ class CartScreenState extends State<CartScreen> {
         ),
       ],
     );
+  }
+
+  void showDialogBox(String title, String message) {
+    showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: Text(
+            title,
+            style: const TextStyle(
+                fontFamily: 'Merriweather',
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: Color(0xff303030)),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+                fontFamily: 'NunitoSans',
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+                color: Color(0xff303030)),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                      fontFamily: 'NunitoSans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: Color(0xff303030)),
+                ))
+          ],
+        ));
   }
 }

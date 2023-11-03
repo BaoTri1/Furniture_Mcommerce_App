@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/controllers/address_controller/address_controller.dart';
+import 'package:furniture_mcommerce_app/controllers/address_controller.dart';
 import 'package:furniture_mcommerce_app/models/ward.dart';
 
 class SelectWard extends StatefulWidget {

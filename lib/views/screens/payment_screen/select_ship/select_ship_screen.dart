@@ -1,10 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/models/item_ship.dart';
+import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:intl/intl.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
-class SelectShip extends StatelessWidget {
+import '../../../../controllers/otherservice_controller.dart';
+import '../../../../local_store/db/account_handler.dart';
+
+class SelectShip extends StatefulWidget {
   const SelectShip({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return SelectShipState();
+  }
+}
+
+class SelectShipState extends State<SelectShip> {
+
+  late List<Methodshinpping> _list = [];
+  bool _enabled = true;
+
+  @override
+  void initState() {
+    _getListMethodShipping();
+    super.initState();
+  }
+
+  void _getListMethodShipping() async {
+    String token = await AccountHandler.getToken();
+    if(token.isEmpty) return;
+    OtherServiceController.fetchListMethodShipping(token).then((dataFormServer) => {
+      if(dataFormServer.errCode == 0){
+        setState((){
+          _list = dataFormServer.methodshinppings!;
+          _enabled = !_enabled;
+        })
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +66,12 @@ class SelectShip extends StatelessWidget {
           },
         ),
       ),
-      body: ListView.builder(
-        itemBuilder: _buildItemPay,
-        itemCount: _listShip.length,
+      body: Skeletonizer(
+        enabled: _enabled,
+        child: ListView.builder(
+          itemBuilder: _buildItemPay,
+          itemCount: _list.length,
+        ),
       ),
     );
   }
@@ -43,7 +81,7 @@ class SelectShip extends StatelessWidget {
       margin: const EdgeInsets.only(top: 10),
       child: GestureDetector(
         onTap: () {
-          Navigator.pop(context);
+          Navigator.pop(context, _list[index]);
         },
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
@@ -62,14 +100,16 @@ class SelectShip extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.all(10),
                     child: SvgIcon(
-                      icon: SvgIconData(_listShip[index].icon),
+                      icon: SvgIconData(_list[index].iconShipment!),
                       size: 35,
                     ),
                   ),
                   Container(
                     margin: const EdgeInsets.all(10),
                     child: Text(
-                      '${_listShip[index].name}\n Phí vận chuyển: ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(_listShip[index].fee)}\n Thời gian vận chuyển: ${_listShip[index].timeShip}',
+                      '${_list[index].nameShipment!}\n'
+                          'Phí vận chuyển: ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(_list[index].fee!)}\n '
+                          'Thời gian vận chuyển: ${_list[index].timeShip!}',
                       style: const TextStyle(
                           fontFamily: 'NunitoSans',
                           fontWeight: FontWeight.w400,
@@ -86,8 +126,6 @@ class SelectShip extends StatelessWidget {
     );
   }
 }
-
-class $ {}
 
 List<ItemShip> _listShip = [
   ItemShip(

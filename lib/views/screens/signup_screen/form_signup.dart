@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:furniture_mcommerce_app/models/localstore/account.dart';
 import 'package:furniture_mcommerce_app/views/main.dart';
 import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
+
+import '../../../controllers/authorization_controller.dart';
+import '../../../local_store/db/account_handler.dart';
+import '../../../shared_resources/share_method.dart';
 
 class SignupForm extends StatefulWidget {
   const SignupForm({super.key});
@@ -13,12 +18,23 @@ class SignupForm extends StatefulWidget {
 
 class SignupFormState extends State<SignupForm> {
   final _formKey = GlobalKey<FormState>();
-  String? _fullName;
-  String? _sdt;
-  String? _passwd;
+  late String _fullName;
+  late String _sdt;
+  late String _passwd;
   String? _comfirmPasswd;
   bool _isObscured = true;
   bool _isObscuredConfirm = true;
+  late Account account;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,14 +222,36 @@ class SignupFormState extends State<SignupForm> {
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(285, 50)),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      print(
-                          '${_fullName} + ${_sdt} + ${_passwd} + ${_comfirmPasswd}');
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const MainScreen()));
+                      // print(
+                      //     '${_fullName} + ${_sdt} + ${_passwd} + ${_comfirmPasswd}');
+                      // Navigator.pushReplacement(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => const MainScreen()));
+                      if (await ShareMethod.checkInternetConnection(context)) {
+                            AuthorizationController.signupHandler(_fullName, _sdt, _passwd).then((dataFormServer) => {
+                              if (dataFormServer.errCode != 0){
+                                  showDialogBox("Lỗi đăng ký", dataFormServer.errMessage!)
+                              }else {
+                                  AccountHandler.deleteAll(),
+                                  account = Account(
+                                  id: 1,
+                                  idUser: dataFormServer.user!.idUser!,
+                                  sdt: _sdt,
+                                  passwd: _passwd,
+                                  isLogin: 1,
+                                  token: dataFormServer.accessToken!),
+
+                                  AccountHandler.insertAccount(account),
+                                  Navigator.pushReplacement(
+                                      context,
+                                          MaterialPageRoute(
+                                                builder: (context) => const MainScreen()))}});
+                        }else{
+                            showDialogBox("Lỗi kết nối mạng", 'Không có kết nối mạng. Hãy kiểm tra lại kết nối của bạn!');
+                        }
                     }
                   },
                   child: const Text('Đăng ký',
@@ -248,7 +286,7 @@ class SignupFormState extends State<SignupForm> {
                           fontSize: 14),
                     ),
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => const LoginScreen()));
@@ -262,5 +300,44 @@ class SignupFormState extends State<SignupForm> {
             ],
           ),
         ));
+  }
+
+  void showDialogBox(String title, String message) {
+    showDialog<String>(
+        context: context,
+        builder: (BuildContext context) =>
+            AlertDialog(
+              title: Text(
+                title,
+                style: const TextStyle(
+                    fontFamily: 'Merriweather',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Color(0xff303030)),
+              ),
+              content: Text(
+                message,
+                style: const TextStyle(
+                    fontFamily: 'NunitoSans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 18,
+                    color: Color(0xff303030)),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Thử lại',
+                      style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: Color(0xff303030)),
+                    ))
+              ],
+            )
+    );
   }
 }

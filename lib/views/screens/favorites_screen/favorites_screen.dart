@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/models/test/product.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
+import 'package:furniture_mcommerce_app/local_store/db/itemfavorite_handler.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../../models/localstore/itemfavorite.dart';
+import '../../../models/states/provider_itemfavorite.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -14,27 +19,34 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class FavoritesScreenState extends State<FavoritesScreen> {
-  final List<Product> _products = [
-    Product(
-        name: 'Minimal Stand 1',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand 2',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand 3',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-    Product(
-        name: 'Minimal Stand 4',
-        price: 2000000.0,
-        urlIamge: 'assets/images/img_product.png'),
-  ];
+
+  late List<ItemFavorite> _list = [];
+  late String idUser;
+
+  @override
+  void initState() {
+    _getListItemFavorite();
+    super.initState();
+  }
+
+  void _getListItemFavorite() async {
+    idUser = await AccountHandler.getIdUser();
+    if(idUser.isEmpty) return;
+    ItemFavoriteHandler.getListItemFavorites(idUser).then((list) => {
+        setState((){
+          _list.addAll(list);
+        }),
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ItemFavoriteState = Provider.of<ProviderItemFavorite>(context, listen: true);
     return MaterialApp(
       title: 'Favorites Screen',
       debugShowCheckedModeBanner: false,
@@ -72,14 +84,14 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                 }),
           ],
         ),
-        body: _products.isNotEmpty
+        body: ItemFavoriteState.getCountItemFavorite > 0
             ? Stack(
                 children: [
                   CustomScrollView(
                     slivers: [
                       SliverList.builder(
                         itemBuilder: _buildItemFavorite,
-                        itemCount: _products.length,
+                        itemCount: _list.length,
                       ),
                       const SliverToBoxAdapter(
                         child: SizedBox(
@@ -107,7 +119,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                                   fontSize: 18)),
                           onPressed: () {
                             setState(() {
-                              _products.clear();
+                              //_products.clear();
                             });
                           },
                         ),
@@ -120,13 +132,14 @@ class FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildItemFavorite(BuildContext context, int index) {
+    final ItemFavoriteState = Provider.of<ProviderItemFavorite>(context, listen: false);
     return GestureDetector(
-      // onTap: () {
-      //   Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
-      //       builder: (_) => ProductScreen(
-      //             name: _products[index].name,
-      //           )));
-      // },
+      onTap: () {
+        Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+            builder: (_) => ProductScreen(
+                  id: _list[index].idProduct, nameCategory: _list[index].category,
+                )));
+      },
       child: Stack(
         children: [
           SizedBox(
@@ -138,8 +151,8 @@ class FavoritesScreenState extends State<FavoritesScreen> {
             height: 100,
             margin: const EdgeInsets.all(10),
             child: Card(
-              child: Image.asset(
-                _products[index].urlIamge,
+              child: Image.network(
+                _list[index].urlImg,
                 fit: BoxFit.contain,
               ),
             ),
@@ -147,21 +160,26 @@ class FavoritesScreenState extends State<FavoritesScreen> {
           Positioned(
             top: 20,
             left: 120,
-            child: Text(
-              _products[index].name,
-              style: const TextStyle(
-                  fontFamily: 'NunitoSans',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: Color(0xff606060)),
+            child: SizedBox(
+              width: 220,
+              child: Text(
+                _list[index].name,
+                style: const TextStyle(
+                    fontFamily: 'NunitoSans',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Color(0xff606060)),
+                    softWrap: true,
+                    overflow: TextOverflow.clip,
+              ),
             ),
           ),
           Positioned(
-            top: 50,
+            top: 70,
             left: 120,
             child: Text(
               NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                  .format(_products[index].price),
+                  .format(_list[index].price),
               style: const TextStyle(
                   fontFamily: 'NunitoSans',
                   fontWeight: FontWeight.w700,
@@ -176,10 +194,11 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                 icon: const SvgIcon(
                     icon: SvgIconData('assets/icons/icon_delete.svg')),
                 onPressed: () {
-                  print('$index');
+                  ItemFavoriteHandler.deleteItemFavorite(_list[index].idProduct, idUser);
                   setState(() {
-                    _products.removeAt(index);
+                    _list.removeAt(index);
                   });
+                  ItemFavoriteState.reloadCountItemFavorite();
                 },
               )),
           Positioned(
@@ -201,7 +220,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                   onPressed: () {
                     print('da them vao gio hang');
                     setState(() {
-                      _products.removeAt(index);
+                      //_products.removeAt(index);
                     });
                   },
                 ),

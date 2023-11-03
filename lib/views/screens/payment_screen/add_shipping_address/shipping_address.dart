@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
@@ -41,7 +42,9 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
   }
 
   void createListAddress() async {
-    List<ShippingAddress> datas = await ShippingAddressHandler.getListItemShippingAddress('U01');
+    String idUser = await AccountHandler.getIdUser();
+    if(idUser.isEmpty) return;
+    List<ShippingAddress> datas = await ShippingAddressHandler.getListItemShippingAddress(idUser);
     setState(() {
       _listAddress = datas;
     });
@@ -50,61 +53,57 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
   @override
   void initState() {
     _setIsCheckedIndex();
-    createListAddress();;
+    createListAddress();
     print(_listAddress.length);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shipping Address Screen',
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const Text(
-            'Địa chỉ giao hàng',
-            style: TextStyle(
-                fontFamily: 'Merriweather',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: Color(0xff303030)),
-          ),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const SvgIcon(
-              color: Color(0xff808080),
-              responsiveColor: false,
-              icon: SvgIconData('assets/icons/icon_back.svg'),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Địa chỉ giao hàng',
+          style: TextStyle(
+              fontFamily: 'Merriweather',
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: Color(0xff303030)),
         ),
-        body: ListView.builder(
-          itemBuilder: _buildItemAddress,
-          itemCount: _listAddress.length,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const SvgIcon(
+            color: Color(0xff808080),
+            responsiveColor: false,
+            icon: SvgIconData('assets/icons/icon_back.svg'),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
-        floatingActionButton: Container(
-          margin: const EdgeInsets.only(bottom: 30, right: 10),
-          child: FloatingActionButton(
-            onPressed: () async{
-              final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AddShippingAddress(
-                            isEdit: false,
-                          )));
+      ),
+      body: ListView.builder(
+        itemBuilder: _buildItemAddress,
+        itemCount: _listAddress.length,
+      ),
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(bottom: 30, right: 10),
+        child: FloatingActionButton(
+          onPressed: () async{
+            final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddShippingAddress(
+                      isEdit: false,
+                    )));
 
-              createListAddress();
-              print('$_isCheckedIndex');
-            },
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            child: const Icon(Icons.add),
-          ),
+            createListAddress();
+            print('$_isCheckedIndex');
+          },
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          child: const Icon(Icons.add),
         ),
       ),
     );
@@ -171,7 +170,7 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
                           icon: SvgIconData('assets/icons/icon_edit.svg'))),
                   IconButton(
                       onPressed: () {
-                        ShippingAddressHandler.deleteItemShippingAddress(_listAddress[index].id, _listAddress[index].id_user);
+                        ShippingAddressHandler.deleteItemShippingAddress(_listAddress[index].id, _listAddress[index].idUser);
                         createListAddress();
                         if(_listAddress.isEmpty) _isCheckedIndex = -1;
                       },
@@ -182,7 +181,9 @@ class ShippingAddressScreenState extends State<ShippingAddressScreen> {
             ],
           ),
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+                Navigator.pop(context, _listAddress[index]);
+            },
             child: Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: ClipRRect(

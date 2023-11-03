@@ -22,14 +22,14 @@ class FurnitureShopDatabase {
       await db.execute(
           "CREATE TABLE $NAME_TABLE_HISTORY_SEARCH(id INTEGER PRIMARY KEY, idUser TEXT, text TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_ITEMS_CART(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, name TEXT, price REAL, quantity INTEGER, urlImg TEXT)");
+          "CREATE TABLE $NAME_TABLE_ITEMS_CART(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, category TEXT, name TEXT, price REAL, quantity INTEGER, urlImg TEXT)");
       await db.execute(
-          "CREATE TABLE $NAME_TABLE_ITEMS_FAVORITES(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, name TEXT, price REAL, urlImg TEXT)");
+          "CREATE TABLE $NAME_TABLE_ITEMS_FAVORITES(id INTEGER PRIMARY KEY, idUser TEXT,  idProduct TEXT, category TEXT, name TEXT, price REAL, urlImg TEXT)");
       await db.execute(
           "CREATE TABLE $NAME_TABLE_SHIPPING_ADDRESS(id INTEGER PRIMARY KEY, idUser TEXT, name TEXT, sdt TEXT, address TEXT, isDefault INTEGER)");
       await db.execute(
           "CREATE TABLE $NAME_TABLE_CREDIT(id INTEGER PRIMARY KEY, idUser TEXT, numberCredit TEXT, name TEXT, month TEXT, year TEXT)");
-    }, version: 5);
+    }, version: 6);
     return _database!;
   }
 }

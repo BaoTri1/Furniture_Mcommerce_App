@@ -1,7 +1,8 @@
 class ItemFavorite {
-  String id;
+  int id;
   String idUser;
   String idProduct;
+  String category;
   String name;
   double price;
   String urlImg;
@@ -10,6 +11,7 @@ class ItemFavorite {
       {required this.id,
         required this.idUser,
         required this.idProduct,
+        required this.category,
         required this.name,
         required this.price,
         required this.urlImg});
@@ -18,7 +20,8 @@ class ItemFavorite {
     var map = <String, dynamic>{
       'id': id,
       'idUser': idUser,
-      'idProduct' :idProduct,
+      'idProduct': idProduct,
+      'category': category,
       'name': name,
       'price': price,
       'urlImg': urlImg
@@ -31,6 +34,7 @@ class ItemFavorite {
         id: map['id'],
         idUser: map['idUser'],
         idProduct: map['idProduct'],
+        category: map['category'],
         name: map['name'],
         price: map['price'],
         urlImg: map['urlImg']);

@@ -1,6 +1,6 @@
 class ShippingAddress {
   late int id;
-  late String id_user;
+  late String idUser;
   late String name;
   late String sdt;
   late String address;
@@ -8,7 +8,7 @@ class ShippingAddress {
 
   ShippingAddress(
       {required this.id,
-      required this.id_user,
+      required this.idUser,
       required this.name,
       required this.sdt,
       required this.address,
@@ -17,7 +17,7 @@ class ShippingAddress {
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       'id': id,
-      'id_user': id_user,
+      'idUser': idUser,
       'name': name,
       'sdt': sdt,
       'address': address,
@@ -29,7 +29,7 @@ class ShippingAddress {
   factory ShippingAddress.fromMap(Map<String, dynamic> map) {
     return ShippingAddress(
         id: map['id'],
-        id_user: map['id_user'],
+        idUser: map['idUser'],
         name: map['name'],
         sdt: map['sdt'],
         address: map['address'],

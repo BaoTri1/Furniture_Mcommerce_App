@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/district.dart';
 import 'package:furniture_mcommerce_app/models/province.dart';
@@ -9,7 +10,7 @@ import 'package:furniture_mcommerce_app/models/ward.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_district.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_province.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/select_ward.dart';
-import 'package:furniture_mcommerce_app/views/shared_resources/check_string.dart';
+import 'package:furniture_mcommerce_app/shared_resources/check_string.dart';
 
 // ignore: must_be_immutable
 class AddShippingAddress extends StatelessWidget {
@@ -106,9 +107,9 @@ class FormAddAddressState extends State<FormAddAddress> {
       _controllerPhone = TextEditingController(text: shippingAddress?.sdt);
       List<String>? sliptAddress = shippingAddress?.address.split(', ');
       _controllerAddress = TextEditingController(text: sliptAddress?[0]);
-      _controllerProvince = TextEditingController(text: sliptAddress?[1]);
+      _controllerProvince = TextEditingController(text: sliptAddress?[3]);
       _controllerDistrict = TextEditingController(text: sliptAddress?[2]);
-      _controllerWard = TextEditingController(text: sliptAddress?[3]);
+      _controllerWard = TextEditingController(text: sliptAddress?[1]);
     } else {
       print('tạo mới');
       _controllerName = TextEditingController();
@@ -480,7 +481,7 @@ class FormAddAddressState extends State<FormAddAddress> {
                       if (isEdit) {
                         ShippingAddress updateShippingAddress = ShippingAddress(
                             id: shippingAddress!.id,
-                            id_user: shippingAddress!.id_user,
+                            idUser: shippingAddress!.idUser,
                             name: _name,
                             sdt: _sdt,
                             address: address,
@@ -490,9 +491,10 @@ class FormAddAddressState extends State<FormAddAddress> {
 
                       } else {
                         print('new ID: ${newId}');
+                        String idUser = await AccountHandler.getIdUser();
                         ShippingAddress newShippingAddress = ShippingAddress(
                             id: newId,
-                            id_user: 'U01',
+                            idUser: idUser,
                             name: _name,
                             sdt: _sdt,
                             address: address,

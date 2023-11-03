@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
-import 'package:furniture_mcommerce_app/views/shared_resources/share_string.dart';
+import 'package:furniture_mcommerce_app/shared_resources/share_string.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:http/http.dart' as http;
 
 class ProductController {
   //?page=1&limit=20&category=&price=0-1000000000&typeroom=&search=
   // ignore: constant_identifier_names
-  static const String url_product = '${ShareString.URL_API}/products/?page=1&limit=20';
+  //static const String url_product = '${ShareString.URL_API}/products/?page=1&limit=20';
 
   static FetchListProduct parseResultsListProduct(String responseBody) {
     var result = json.decode(responseBody);

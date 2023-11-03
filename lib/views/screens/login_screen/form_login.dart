@@ -1,4 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
+import 'package:furniture_mcommerce_app/models/localstore/account.dart';
+import 'package:furniture_mcommerce_app/shared_resources/share_method.dart';
+import 'package:furniture_mcommerce_app/controllers/authorization_controller.dart';
 import 'package:furniture_mcommerce_app/views/main.dart';
 import 'package:furniture_mcommerce_app/views/screens/signup_screen/signup_screen.dart';
 
@@ -13,9 +18,20 @@ class FormLogin extends StatefulWidget {
 
 class FormLoginState extends State<FormLogin> {
   final _formKey = GlobalKey<FormState>();
-  String? _sdt;
-  String? _passwd;
+  late String _sdt;
+  late String _passwd;
   bool _isObscured = true;
+  late Account account;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +50,7 @@ class FormLoginState extends State<FormLogin> {
                 maxLength: 10,
                 decoration: InputDecoration(
                   contentPadding:
-                      const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
                   hintText: 'Nhập SDT để đăng nhập...',
                   labelText: 'Số điện thoại',
                   labelStyle: const TextStyle(
@@ -82,7 +98,7 @@ class FormLoginState extends State<FormLogin> {
                     },
                   ),
                   contentPadding:
-                      const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                  const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
                   hintText: 'Nhập mật khẩu...',
                   labelText: 'Mật khẩu',
                   labelStyle: const TextStyle(
@@ -132,15 +148,30 @@ class FormLoginState extends State<FormLogin> {
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(285, 50)),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      print('${_sdt} + ${_passwd}');
-                      if (_sdt == '0123456789' && _passwd == '123') {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MainScreen()));
-                      }
+                      if (await ShareMethod.checkInternetConnection(context)) {
+                        AuthorizationController.loginHandler(_sdt, _passwd).then((dataFormServer) => {
+                        if (dataFormServer.errCode != 0){
+                            showDialogBox("Lỗi đăng nhập", dataFormServer.errMessage!)
+                        }else {
+                            AccountHandler.deleteAll(),
+                            account = Account(
+                            id: 1,
+                            idUser: dataFormServer.user!.idUser!,
+                            sdt: _sdt,
+                            passwd: _passwd,
+                            isLogin: 1,
+                            token: dataFormServer.accessToken!),
+
+                            AccountHandler.insertAccount(account),
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const MainScreen()))}});
+                    }else{
+                      showDialogBox("Lỗi kết nối mạng", 'Không có kết nối mạng. Hãy kiểm tra lại kết nối của bạn!');
+                    }
                     }
                   },
                   child: const Text('Đăng nhập',
@@ -155,22 +186,22 @@ class FormLoginState extends State<FormLogin> {
               ),
               Center(
                   child: TextButton(
-                child: const Text(
-                  'ĐĂNG KÝ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontFamily: 'NunitoSans',
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xff303030),
-                      fontSize: 18),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignupScreen()));
-                },
-              )),
+                    child: const Text(
+                      'ĐĂNG KÝ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xff303030),
+                          fontSize: 18),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SignupScreen()));
+                    },
+                  )),
               const SizedBox(
                 height: 40,
               ),
@@ -178,4 +209,44 @@ class FormLoginState extends State<FormLogin> {
           ),
         ));
   }
+
+  void showDialogBox(String title, String message) {
+    showDialog<String>(
+        context: context,
+        builder: (BuildContext context) =>
+            AlertDialog(
+              title: Text(
+                title,
+                style: const TextStyle(
+                    fontFamily: 'Merriweather',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Color(0xff303030)),
+              ),
+              content: Text(
+                message,
+                style: const TextStyle(
+                    fontFamily: 'NunitoSans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 18,
+                    color: Color(0xff303030)),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Thử lại',
+                      style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          color: Color(0xff303030)),
+                    ))
+              ],
+            )
+    );
+  }
+
 }

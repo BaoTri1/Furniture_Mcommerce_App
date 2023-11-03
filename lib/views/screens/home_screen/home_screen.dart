@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/controllers/address_controller/product_controller.dart';
+import 'package:furniture_mcommerce_app/controllers/product_controller.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
+import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
+import 'package:furniture_mcommerce_app/views/screens/cart_screen/cart_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/list_category.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -111,17 +114,7 @@ class HomeScreenState extends State<HomeScreen> {
             },
           ),
           actions: [
-            IconButton(
-                padding: const EdgeInsets.only(right: 12),
-                icon: const SvgIcon(
-                  icon: SvgIconData('assets/icons/icon_cart.svg'),
-                  responsiveColor: false,
-                  color: Color(0xff808080),
-                  size: 24,
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/cart');
-                }),
+            _buildIconCart(context)
           ],
         ),
         body: RefreshIndicator(
@@ -185,5 +178,55 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildIconCart(BuildContext context) {
+    final itemCartState = Provider.of<ProviderItemCart>(context, listen: true);
+    return IconButton(
+        padding: const EdgeInsets.only(right: 12),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
+        },
+        icon: Stack(children: [
+            const SizedBox(
+              width: 40,
+              height: 30,
+            ),
+            const Positioned(
+              top: 4,
+              child: SvgIcon(
+                icon: SvgIconData('assets/icons/icon_cart.svg'),
+                responsiveColor: false,
+                color: Color(0xff808080),
+                size: 24,
+              ),
+            ),
+            itemCartState.getCountItemCart > 0 ?
+              Positioned(
+                right: itemCartState.getCountItemCart > 99 ? 0: 6,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 12,
+                    minHeight: 12,
+                  ),
+                  child: Text(
+                    itemCartState.getCountItemCart > 99 ?
+                    '+99' : '${itemCartState.getCountItemCart}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+      )
+                : const SizedBox()]),);
   }
 }
