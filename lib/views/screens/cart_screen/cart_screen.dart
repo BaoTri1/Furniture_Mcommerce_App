@@ -8,6 +8,7 @@ import 'package:furniture_mcommerce_app/views/screens/product_screen/product_scr
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../controllers/discount_controller.dart';
 import '../../../local_store/db/account_handler.dart';
 import '../../../models/localstore/itemcart.dart';
 
@@ -37,12 +38,19 @@ class CartScreenState extends State<CartScreen> {
     idUser = await AccountHandler.getIdUser();
     if(idUser.isEmpty) return;
     ItemCartHandler.getListItemCart(idUser).then((list) => {
-      setState((){
-        _list.addAll(list);
-      }),
-      for (var item in list) {
-          total += (item.price * item.quantity)
-      }
+      for(var item in list){
+          print(item.price),
+          DiscountController.checkDiscountValid(item.idProduct).then((data) => {
+              if(data.errCode == 0){
+                item.price = item.price - (item.price * (data.discounts![0].value!/100.0)),
+                print(item.price),
+              },
+              setState((){
+                _list.add(item);
+                total += (item.price * item.quantity);
+              }),
+          })
+      },
     });
   }
 
@@ -201,14 +209,18 @@ class CartScreenState extends State<CartScreen> {
           Positioned(
             top: 60,
             left: 120,
-            child: Text(
-              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                  .format(_list[index].price),
-              style: const TextStyle(
-                  fontFamily: 'NunitoSans',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                  color: Color(0xff303030)),
+            child: Row(
+              children: [
+                Text(
+                  NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                      .format(_list[index].price),
+                  style: const TextStyle(
+                      fontFamily: 'NunitoSans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Color(0xff303030)),
+                ),
+              ],
             ),
           ),
           Positioned(

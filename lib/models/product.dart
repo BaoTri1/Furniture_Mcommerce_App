@@ -75,6 +75,10 @@ class FetchListProduct {
 class Product {
   String? idProduct;
   String? imgUrl;
+  String? nameDiscount;
+  int? value;
+  String? dayStart;
+  String? dayEnd;
   String? idCat;
   String? nameCat;
   String? idRoom;
@@ -90,6 +94,10 @@ class Product {
   Product(
       {this.idProduct,
         this.imgUrl,
+        this.nameDiscount,
+        this.value,
+        this.dayStart,
+        this.dayEnd,
         this.idCat,
         this.nameCat,
         this.idRoom,
@@ -105,6 +113,10 @@ class Product {
   Product.fromJson(Map<String, dynamic> json) {
     idProduct = json['idProduct'];
     imgUrl = json['imgUrl'];
+    nameDiscount = json['nameDiscount'];
+    value = json['value'];
+    dayStart = json['dayStart'];
+    dayEnd = json['dayEnd'];
     idCat = json['idCat'];
     nameCat = json['nameCat'];
     idRoom = json['idRoom'];
@@ -127,6 +139,10 @@ class Product {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['idProduct'] = this.idProduct;
     data['imgUrl'] = this.imgUrl;
+    data['nameDiscount'] = this.nameDiscount;
+    data['value'] = this.value;
+    data['dayStart'] = this.dayStart;
+    data['dayEnd'] = this.dayEnd;
     data['idCat'] = this.idCat;
     data['nameCat'] = this.nameCat;
     data['idRoom'] = this.idRoom;
@@ -144,6 +160,7 @@ class Product {
     return data;
   }
 }
+
 
 class ListImageDetail {
   String? imgUrl;

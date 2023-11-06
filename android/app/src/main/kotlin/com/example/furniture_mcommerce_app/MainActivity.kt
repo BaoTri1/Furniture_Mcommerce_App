@@ -1,6 +1,7 @@
 package com.example.furniture_mcommerce_app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterActivity //Maybe its there already
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity () {
 }

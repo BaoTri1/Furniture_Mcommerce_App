@@ -19,6 +19,7 @@ import 'package:lottie/lottie.dart';
 import '../../../local_store/db/account_handler.dart';
 import '../../../local_store/db/itemfavorite_handler.dart';
 import '../../../models/states/provider_itemfavorite.dart';
+import '../../../shared_resources/share_string.dart';
 import '../home_screen/product_item.dart';
 
 // ignore: must_be_immutable
@@ -38,9 +39,6 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
   ProductScreenState({required this.id, required this.nameCategory});
   String id;
   String nameCategory;
-
-  static const String CLOSE_DIALOG = 'CloseDialog';
-  static const String PUSH_LOGIN = 'PushLogin';
 
   final ScrollController _controller = ScrollController();
   late final AnimationController _controllerAnimation;
@@ -243,15 +241,48 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                     SliverToBoxAdapter(
                       child: Container(
                         margin: const EdgeInsets.only(left: 10),
-                        child: Text(
-                          NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                              .format(_product.price ?? 0),
-                          style: const TextStyle(
-                              fontFamily: 'NunitoSans',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 30,
-                              color: Color(0xff303030)),
+                        child: Row(
+                          children: [
+                            Text(
+                              NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                                  .format(_product.value == null ? _product.price ?? 0
+                                  : (_product.price! - (_product.price!*(_product.value!/100.0)))),
+                              style: TextStyle(
+                                  fontFamily: 'NunitoSans',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 30,
+                                  color: _product.value == null ? const Color(0xff303030) : Colors.red),
+                            ),
+                            _product.value == null ? const SizedBox()
+                                : Container(
+                                    margin: const EdgeInsets.only(left:  20),
+                                    child: Text(
+                                      '-${_product.value}%',
+                                      style: const TextStyle(
+                                        fontFamily: 'NunitoSans',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 20,
+                                        color: Color(0xff303030)),
+                                    ),
+                            )
+                          ],
                         ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Container(
+                        margin: const EdgeInsets.all(10),
+                        child: _product.value == null ? const SizedBox() : Text(
+                          NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                              .format(_product.price),
+                          style: const TextStyle(
+                            fontFamily: 'NunitoSans',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 20,
+                            color: Color(0xff303030),
+                            decoration: TextDecoration.lineThrough,
+                            decorationThickness: 1.5,),
+                        )
                       ),
                     ),
                     SliverToBoxAdapter(
@@ -336,7 +367,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                                     quantity++;
                                     ProductController.checkQuantityProduct(id, quantity).then((dataFormServer) => {
                                       if(dataFormServer.errCode != 0){
-                                        showDialogBox("Thông báo", dataFormServer.errMessage!, CLOSE_DIALOG),
+                                        showDialogBox("Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                                       }else {
                                         setState(() {
                                           quantity;
@@ -550,7 +581,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                       }
                       ItemFavoriteState.reloadCountItemFavorite();
                     }else{
-                      showDialogBox('Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', PUSH_LOGIN);
+                      showDialogBox('Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', ShareString.PUSH_LOGIN);
                     }
                   },
                   icon: SvgIcon(
@@ -581,7 +612,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                                 int newQuantity = oldQuantity + quantity;
                                 ProductController.checkQuantityProduct(_product.idProduct!, newQuantity).then((dataFormServer) => {
                                   if(dataFormServer.errCode != 0){
-                                    showDialogBox("Thông báo", dataFormServer.errMessage!, CLOSE_DIALOG),
+                                    showDialogBox("Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                                   }else {
                                     ItemCartHandler.updateQuantityItemCart(_product.idProduct!, idUser, newQuantity),
                                     setState(() {
@@ -592,7 +623,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                             }else{
                               ProductController.checkQuantityProduct(_product.idProduct!, quantity).then((dataFormServer) => {
                                 if(dataFormServer.errCode != 0){
-                                  showDialogBox("Thông báo", dataFormServer.errMessage!, CLOSE_DIALOG),
+                                  showDialogBox("Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                                 }else {
                                   itemCart = ItemCart(
                                       id: newID,
@@ -613,7 +644,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                               });
                             }
                         }else{
-                            showDialogBox('Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', PUSH_LOGIN);
+                            showDialogBox('Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', ShareString.PUSH_LOGIN);
                         }
                       },
                 )),
@@ -646,10 +677,10 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
           actions: [
             TextButton(
                 onPressed: () async {
-                  if(action == CLOSE_DIALOG){
+                  if(action == ShareString.CLOSE_DIALOG){
                     Navigator.pop(context);
                   }
-                  else if(action == PUSH_LOGIN){
+                  else if(action == ShareString.PUSH_LOGIN){
                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
                   }
                 },

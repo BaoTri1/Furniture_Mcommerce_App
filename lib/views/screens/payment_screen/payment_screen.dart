@@ -1,17 +1,30 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:flutter_stripe/flutter_stripe.dart'hide Card;
+import 'package:furniture_mcommerce_app/controllers/discount_controller.dart';
+import 'package:furniture_mcommerce_app/controllers/order_controller.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
+import 'package:furniture_mcommerce_app/models/ItemOrder.dart';
+import 'package:furniture_mcommerce_app/models/discount.dart';
 import 'package:furniture_mcommerce_app/models/localstore/shipping_address.dart';
 import 'package:furniture_mcommerce_app/models/methodpayment.dart';
 import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_discount/select_discount_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_ship/select_ship_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../local_store/db/account_handler.dart';
 import '../../../models/localstore/itemcart.dart';
+import '../../../shared_resources/share_string.dart';
+import '../login_screen/login_screen.dart';
 
 // ignore: must_be_immutable
 class PaymentScreen extends StatefulWidget {
@@ -29,18 +42,124 @@ class PaymentScreen extends StatefulWidget {
 class PaymentScreenState extends State<PaymentScreen> {
   PaymentScreenState({required this.list});
   List<ItemCart> list;
+  bool validDiscount = false;
+  double _totalOrder = 0;
+  double _totalProductPrice = 0;
 
   Methodpayment _methodpayment = Methodpayment();
   Methodshinpping _methodshinpping = Methodshinpping();
-
+  Discount  _discount = Discount();
   ShippingAddress? shippingAddress;
 
+  Map<String, dynamic>? paymentIntent;
+  var clientKey = dotenv.env["ClientKey"] ?? "";
+
+  Future<void> makePayment() async {
+    try {
+      paymentIntent = await createPaymentIntent('10000', 'INR');
+
+      await Stripe.instance
+          .initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntent!['client_secret'],
+          applePay: null,
+          googlePay: null,
+          style: ThemeMode.light,
+          merchantDisplayName: 'SomeMerchantName',
+        ),
+      )
+          .then((value) {
+        log("Success");
+      });
+
+      displayPaymentSheet(); // Payment Sheet
+    } catch (e, s) {
+      String ss = "exception 1 :$e";
+      String s2 = "reason :$s";
+      log("exception 1:$e");
+    }
+  }
+
+
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance.presentPaymentSheet().then((value) {
+        showDialog(
+          context: context,
+          builder: (_) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                      ),
+                    ),
+                    Text("Payment Successfull"),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+
+        paymentIntent = null;
+      }).onError((error, stackTrace) {
+        String ss = "exception 2 :$error";
+        String s2 = "reason :$stackTrace";
+      });
+    } on StripeException catch (e) {
+      print('Error is:---> $e');
+      String ss = "exception 3 :$e";
+    } catch (e) {
+      log('$e');
+    }
+  }
+
+  calculateAmount(String amount) {
+    final calculatedAmout = (int.parse(amount)) * 100;
+    return calculatedAmout.toString();
+  }
+
+  createPaymentIntent(String amount, String currency) async {
+    try {
+
+      // TODO: Request body
+      Map<String, dynamic> body = {
+        'amount': calculateAmount(amount),
+        'currency': currency,
+        'payment_method_types[]': 'card'
+      };
+
+      // TODO: POST request to stripe
+      var response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        headers: {
+          'Authorization': 'Bearer ' + clientKey, //SecretKey used here
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: body,
+      );
+
+      log('Payment Intent Body->>> ${response.body.toString()}');
+      return jsonDecode(response.body);
+    } catch (err) {
+      // ignore: avoid_print
+      log('err charging user: ${err.toString()}');
+    }
+  }
   @override
   void initState() {
     _getShippingAddressDefault();
+    totalOrder();
     print('name: ${shippingAddress?.name}, address: ${shippingAddress?.address}');
     super.initState();
   }
+
 
   void _getShippingAddressDefault() async {
     String idUser = await AccountHandler.getIdUser();
@@ -59,12 +178,31 @@ class PaymentScreenState extends State<PaymentScreen> {
 
   }
 
-  double totalOrder(){
-    double total = 0;
+  void totalOrder(){
     for(var item in list){
-      total += item.price * item.quantity;
+      _totalProductPrice += item.price * item.quantity;
     }
-    return total;
+    _totalOrder = _totalProductPrice;
+  }
+
+  bool checkDiscountValid(){
+    for(var item in list){
+      if(item.idProduct == _discount.idProduct!){
+        validDiscount = true;
+      }
+    }
+    return validDiscount;
+  }
+
+  bool checkTimeDiscount(String dayStar, String dayEnd){
+    DateTime dayCurrent = DateTime.now().toUtc();
+    DateTime dayStartDiscount = DateTime.parse(dayStar).toUtc();
+    DateTime dayEndDiscount = DateTime.parse(dayEnd).toUtc();
+
+    if(dayCurrent.isBefore(dayStartDiscount) || dayCurrent.isAfter(dayEndDiscount)){
+      return false;
+    }
+    return true;
   }
 
 
@@ -226,66 +364,106 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
-            //lable: mã giảm giá và btn edit
-            SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(left: 10, top: 20),
-                    child: const Text(
-                      'Mã giảm giá',
-                      style: TextStyle(
-                          fontFamily: 'NunitoSans',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          color: Color(0xff909090)),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(right: 10, top: 20),
-                    child: IconButton(
-                        onPressed: () {},
-                        icon: const SvgIcon(
-                          icon: SvgIconData('assets/icons/icon_edit.svg'),
-                          color: Color(0xff808080),
-                        )),
-                  )
-                ],
-              ),
-            ),
-            //Widget hiển thị giảm giá
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                child: ClipRRect(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    //height: MediaQuery.of(context).size.height,
-                    margin: const EdgeInsets.only(bottom: 6.0),
-                    decoration: const BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.grey,
-                              offset: Offset(0.0, 1.0),
-                              blurRadius: 6.0)
-                        ]),
-                    child: Container(
-                      margin: const EdgeInsets.all(10),
-                      child: const Text(
-                        'Chọn hoặc nhập mã giảm giá',
-                        style: TextStyle(
-                            fontFamily: 'NunitoSans',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                            color: Color(0xff303030)),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // //lable: mã giảm giá và btn edit
+            // SliverToBoxAdapter(
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Container(
+            //         margin: const EdgeInsets.only(left: 10, top: 20),
+            //         child: const Text(
+            //           'Mã giảm giá',
+            //           style: TextStyle(
+            //               fontFamily: 'NunitoSans',
+            //               fontWeight: FontWeight.w600,
+            //               fontSize: 18,
+            //               color: Color(0xff909090)),
+            //         ),
+            //       ),
+            //       Container(
+            //         margin: const EdgeInsets.only(right: 10, top: 20),
+            //         child: IconButton(
+            //             onPressed: () async {
+            //               final resultDiscount = await Navigator.of(context).push(
+            //                   MaterialPageRoute(builder: (_) => const SelectDiscountScreen())
+            //               );
+            //               if(resultDiscount != null){
+            //                 setState(() {
+            //                   _discount = resultDiscount as Discount;
+            //                 });
+            //                 if(!checkDiscountValid()){
+            //                     showDialogBox('Thông báo', 'Mã giảm giá không hợp lệ!', ShareString.CLOSE_DIALOG);
+            //                     return;
+            //                 }
+            //
+            //                 if(checkTimeDiscount(_discount.dayStart!, _discount.dayEnd!)){
+            //                   showDialogBox('Thông báo', 'Thời gian áp dụng không hợp lệ!', ShareString.CLOSE_DIALOG);
+            //                   return;
+            //                 }
+            //
+            //                 DiscountController.CheckQuantityDiscount(_discount.idDiscount!).then((dataFormServer) => {
+            //                     if(dataFormServer.errCode == 1) {
+            //                       showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
+            //                       setState(() {
+            //                           validDiscount = !validDiscount;
+            //                       }),
+            //                     }else{
+            //                       setState((){
+            //                           print(_discount.value!/100.0);
+            //                           _totalOrder = 0;
+            //                           for(var item in list){
+            //                               if(item.idProduct == _discount.idProduct!){
+            //                                 _totalOrder += (item.price - (item.price * (_discount.value!/100.0))) * item.quantity;
+            //                               }else{
+            //                                 _totalOrder += item.price * item.quantity;
+            //                               }
+            //                           }
+            //                       })
+            //                     }
+            //                 });
+            //                 print('${_discount.idDiscount} + ${_discount.idProduct} + ${_discount.nameDiscount} + ${_discount.nameProduct}');
+            //               }
+            //             },
+            //             icon: const SvgIcon(
+            //               icon: SvgIconData('assets/icons/icon_edit.svg'),
+            //               color: Color(0xff808080),
+            //             )),
+            //       )
+            //     ],
+            //   ),
+            // ),
+            // //Widget hiển thị giảm giá
+            // SliverToBoxAdapter(
+            //   child: Padding(
+            //     padding: const EdgeInsets.only(left: 20, right: 20),
+            //     child: ClipRRect(
+            //       child: Container(
+            //         width: MediaQuery.of(context).size.width,
+            //         //height: MediaQuery.of(context).size.height,
+            //         margin: const EdgeInsets.only(bottom: 6.0),
+            //         decoration: const BoxDecoration(
+            //             color: Colors.white,
+            //             boxShadow: [
+            //               BoxShadow(
+            //                   color: Colors.grey,
+            //                   offset: Offset(0.0, 1.0),
+            //                   blurRadius: 6.0)
+            //             ]),
+            //         child: Container(
+            //           margin: const EdgeInsets.all(10),
+            //           child: Text(
+            //             validDiscount ? _discount.nameDiscount! : 'Chọn hoặc nhập mã giảm giá',
+            //             style: const TextStyle(
+            //                 fontFamily: 'NunitoSans',
+            //                 fontWeight: FontWeight.w700,
+            //                 fontSize: 16,
+            //                 color: Color(0xff303030)),
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             //lable: phương thức thanh toán và btn edit
             SliverToBoxAdapter(
               child: Row(
@@ -492,7 +670,7 @@ class PaymentScreenState extends State<PaymentScreen> {
                                 child: Text(
                                   NumberFormat.currency(
                                           locale: 'vi_VN', symbol: '₫')
-                                      .format(totalOrder()),
+                                      .format(_totalProductPrice),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -551,8 +729,8 @@ class PaymentScreenState extends State<PaymentScreen> {
                                   NumberFormat.currency(
                                           locale: 'vi_VN', symbol: '₫')
                                       .format(
-                                            _methodshinpping.fee == null ? totalOrder()
-                                                : (totalOrder() + _methodshinpping.fee!.toDouble())),
+                                            _methodshinpping.fee == null ? _totalOrder
+                                                : (_totalOrder + _methodshinpping.fee!.toDouble())),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -585,9 +763,56 @@ class PaymentScreenState extends State<PaymentScreen> {
                           fontFamily: 'NunitoSans',
                           fontWeight: FontWeight.w600,
                           fontSize: 20)),
-                  onPressed: () {
-                    showAlertDialog(context);
+                  onPressed: () async {
+                    //showAlertDialog(context);
                     //Navigator.of(context).pop(context);
+                    // if(shippingAddress == null){
+                    //   showDialogBox('Thông báo', 'Bạn phải thêm địa chỉ giao hàng.', ShareString.CLOSE_DIALOG);
+                    //   return;
+                    // }
+                    //
+                    // if(_methodshinpping.idShipment == null){
+                    //   showDialogBox('Thông báo', 'Bạn phải chọn phương thức vận chuyển.', ShareString.CLOSE_DIALOG);
+                    //   return;
+                    // }
+                    //
+                    // if(_methodpayment.idPayment == null){
+                    //   showDialogBox('Thông báo', 'Bạn phải chọn phương thức thanh toán.', ShareString.CLOSE_DIALOG);
+                    //   return;
+                    // }
+                    // List<ItemOrder> itemorders = [];
+                    // for(var item in list){
+                    //     ItemOrder itemorder = ItemOrder(idProduct: item.idProduct, numProduct: item.quantity);
+                    //     itemorders.add(itemorder);
+                    // }
+                    // if(_methodpayment.idPayment == 'PM1'){
+                    //     //Thanh toán trực tiếp
+                    //   OrderController.createOrder(
+                    //       _methodshinpping.idShipment!,
+                    //       shippingAddress!.idUser,
+                    //       _methodpayment.idPayment!,
+                    //       shippingAddress!.name,
+                    //       shippingAddress!.sdt,
+                    //       shippingAddress!.address,
+                    //       _totalOrder,
+                    //       false,
+                    //       itemorders).then((dataFormServer) => {
+                    //           if(dataFormServer.errCode == 0){
+                    //               showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
+                    //           }else{
+                    //               showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
+                    //           }
+                    //   });
+                    //
+                    // }
+                    // else if(_methodpayment.idPayment == 'PM2'){
+                    //     //Thanh toán qua thẻ tín dụng
+                    // }
+                    //
+                    // print('${_methodshinpping.idShipment} + ${shippingAddress!.idUser} + ${_methodpayment!.idPayment}'
+                    //     ' + ${shippingAddress!.name} + ${shippingAddress!.sdt} + ${shippingAddress!.address}'
+                    //     ' + ${_totalOrder} + ${true}');
+                    makePayment();
                   },
                 ),
               ),
@@ -671,6 +896,48 @@ class PaymentScreenState extends State<PaymentScreen> {
             )),
       ],
     );
+  }
+
+  void showDialogBox(String title, String message, String action) {
+    showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: Text(
+            title,
+            style: const TextStyle(
+                fontFamily: 'Merriweather',
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: Color(0xff303030)),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+                fontFamily: 'NunitoSans',
+                fontWeight: FontWeight.w400,
+                fontSize: 18,
+                color: Color(0xff303030)),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () async {
+                  if(action == ShareString.CLOSE_DIALOG){
+                    Navigator.pop(context);
+                  }
+                  else if(action == ShareString.PUSH_LOGIN){
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+                  }
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                      fontFamily: 'NunitoSans',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      color: Color(0xff303030)),
+                ))
+          ],
+        ));
   }
 
   showAlertDialog(BuildContext context) {

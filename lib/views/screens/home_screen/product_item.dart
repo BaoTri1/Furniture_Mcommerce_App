@@ -11,16 +11,12 @@ import '../../../controllers/product_controller.dart';
 import '../../../local_store/db/account_handler.dart';
 import '../../../local_store/db/itemcart_handler.dart';
 import '../../../models/states/provider_itemcart.dart';
+import '../../../shared_resources/share_string.dart';
 import '../login_screen/login_screen.dart';
 
 class ProductItem extends StatelessWidget {
   final Product productInfor;
   const ProductItem(this.productInfor, {super.key});
-
-  // ignore: constant_identifier_names
-  static const String CLOSE_DIALOG = 'CloseDialog';
-  // ignore: constant_identifier_names
-  static const String PUSH_LOGIN = 'PushLogin';
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +61,27 @@ class ProductItem extends StatelessWidget {
               top: 230,
               child: Text(
                 NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                    .format(productInfor.price),
-                style: const TextStyle(
+                    .format(productInfor.value == null ? productInfor.price
+                      : (productInfor.price! - (productInfor.price!*(productInfor.value!/100.0)))),
+                style: TextStyle(
                     fontFamily: 'NunitoSans',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xff303030)),
+                    color: productInfor.value == null ? Color(0xff303030) : Colors.red    ),
+              )),
+          productInfor.value == null ? const SizedBox() :
+            Positioned(
+              top: 250,
+              child: Text(
+                NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                    .format(productInfor.price),
+                style: const TextStyle(
+                    fontFamily: 'NunitoSans',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    color: Color(0xff303030),
+                    decoration: TextDecoration.lineThrough,
+                    decorationThickness: 1.5,),
               )),
           Positioned(
               top: 125,
@@ -98,7 +109,7 @@ class ProductItem extends StatelessWidget {
                         int oldQuantity = await ItemCartHandler.getQuantityProduct(productInfor.idProduct!, idUser);
                         ProductController.checkQuantityProduct(productInfor.idProduct!, oldQuantity + 1).then((dataFormServer) => {
                           if(dataFormServer.errCode != 0){
-                            showDialogBox(context, "Thông báo", dataFormServer.errMessage!, CLOSE_DIALOG),
+                            showDialogBox(context, "Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                           }else {
                             ItemCartHandler.updateQuantityItemCart(productInfor.idProduct!, idUser, oldQuantity + 1),
                             Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT)
@@ -107,7 +118,7 @@ class ProductItem extends StatelessWidget {
                       }else{
                         ProductController.checkQuantityProduct(productInfor.idProduct!, 1).then((dataFormServer) => {
                           if(dataFormServer.errCode != 0){
-                            showDialogBox(context, "Thông báo", dataFormServer.errMessage!, CLOSE_DIALOG),
+                            showDialogBox(context, "Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                           }else {
                             itemCart = ItemCart(
                                 id: newID,
@@ -126,11 +137,30 @@ class ProductItem extends StatelessWidget {
                       }
                     }else{
                       // ignore: use_build_context_synchronously
-                      showDialogBox(context, 'Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', PUSH_LOGIN);
+                      showDialogBox(context, 'Thông báo', 'Bạn cần đăng nhập để thực hiện chức năng này.', ShareString.PUSH_LOGIN);
                     }
                   },
                 ),
-              ))
+              )),
+          productInfor.value == null ? const SizedBox() :
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(4)),
+                  ),
+                  child: Text(
+                    '- ${productInfor.value}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              )
         ],
       ),
     );
@@ -159,10 +189,10 @@ class ProductItem extends StatelessWidget {
           actions: [
             TextButton(
                 onPressed: () async {
-                  if(action == CLOSE_DIALOG){
+                  if(action == ShareString.CLOSE_DIALOG){
                     Navigator.pop(context);
                   }
-                  else if(action == PUSH_LOGIN){
+                  else if(action == ShareString.PUSH_LOGIN){
                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
                   }
                 },

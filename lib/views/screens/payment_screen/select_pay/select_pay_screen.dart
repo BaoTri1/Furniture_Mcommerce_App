@@ -3,7 +3,6 @@ import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/controllers/otherservice_controller.dart';
 import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/models/item_pay.dart';
-import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../models/methodpayment.dart';
