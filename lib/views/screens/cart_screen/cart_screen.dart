@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../../controllers/discount_controller.dart';
 import '../../../local_store/db/account_handler.dart';
 import '../../../models/localstore/itemcart.dart';
+import '../../../shared_resources/share_method.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -148,11 +149,16 @@ class CartScreenState extends State<CartScreen> {
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w600,
                                       fontSize: 20)),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => PaymentScreen(list: _list,)));
+                              onPressed: () async {
+                                  if (await ShareMethod.checkInternetConnection(context)) {
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => PaymentScreen(list: _list,)));
+                                  }else{
+                                    showDialogBox("Lỗi kết nối mạng", 'Không có kết nối mạng. Hãy kiểm tra lại kết nối của bạn!');
+                                  }
                               },
                             ),
                           ),

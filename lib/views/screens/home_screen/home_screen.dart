@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/controllers/product_controller.dart';
+import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
 import 'package:furniture_mcommerce_app/views/screens/cart_screen/cart_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/list_category.dart';
+import 'package:furniture_mcommerce_app/views/screens/search_screen/search_screen.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -110,7 +112,7 @@ class HomeScreenState extends State<HomeScreen> {
               icon: SvgIconData('assets/icons/icon_search.svg'),
             ),
             onPressed: () {
-              Navigator.pushNamed(context, '/search');
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchScreen()));
             },
           ),
           actions: [
@@ -167,9 +169,9 @@ class HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: _canLoadMore
                     ? Container(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator(),
+                      padding: const EdgeInsets.only(bottom: 16),
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
                 )
                     : const SizedBox(),
               ),
@@ -184,8 +186,12 @@ class HomeScreenState extends State<HomeScreen> {
     final itemCartState = Provider.of<ProviderItemCart>(context, listen: true);
     return IconButton(
         padding: const EdgeInsets.only(right: 12),
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
+        onPressed: () async {
+          if(await AccountHandler.checkIsLogin()) {
+            // ignore: use_build_context_synchronously
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const CartScreen()));
+          }
         },
         icon: Stack(children: [
             const SizedBox(

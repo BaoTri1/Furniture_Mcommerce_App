@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtocart.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtofavorite.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/order_success_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_discount/select_discount_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/search_screen/product_search.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +32,6 @@ import 'package:furniture_mcommerce_app/views/screens/boarding_screen/boarding_s
 
 void main() async{
   await dotenv.load(fileName: ".env");
-  //Stripe.publishableKey = "pk_test_51MvsGiJt8JECIDWIKv3yyWHydmbxUc0dhnIOM4LLDVG1BIoIjf8HLel9Bg4Wzy1Mrg8Ze4o7MCQOwdStEhKW1DZZ00fXE9rN9m";
   Stripe.publishableKey = dotenv.env["PUBLISHABLE_KEY"] ?? "";
   runApp(const MyApp());
 }
@@ -44,8 +46,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => ProviderItemFavorite()),
         ChangeNotifierProvider(create: (context) => ProviderItemCart()),
-        ChangeNotifierProvider(create: (context) => ProviderAnimationAddToCart()),
-        ChangeNotifierProvider(create: (context) => ProviderAnimationAddToFavorite()),
       ],
       child: MaterialApp(
           title: 'Furniture Store',
@@ -59,7 +59,17 @@ class MyApp extends StatelessWidget {
             '/cart': (context) => const CartScreen(),
             '/search': (context) => const SearchScreen()
           },
-          home: const MainScreen()),
+          home: WillPopScope(
+            onWillPop: () async {
+              // Thực hiện các công việc cuối cùng trước khi thoát ứng dụng ở đây.
+              print('Thực hiện công việc cuối cùng trước khi thoát ứng dụng.');
+              // Gọi SystemNavigator.pop() để thoát ứng dụng.
+              SystemNavigator.pop();
+              return true; // Trả về true vì SystemNavigator.pop() sẽ làm thoát ứng dụng.
+            },
+            child: const MainScreen(),
+        )
+      ),
     );
   }
 }
@@ -100,14 +110,16 @@ class MainScreenState extends State<MainScreen> {
       print('${account.sdt} + ${account.passwd}');
       // ignore: use_build_context_synchronously
       if(await ShareMethod.checkInternetConnection(context)){
-        AuthorizationController.loginHandler(account.sdt, account.passwd).then((dataFormServer) => {
-          if(dataFormServer.errCode != 0){
-            AccountHandler.setStateLogin(account.id, 0, ''),
-          }else{
-            AccountHandler.setStateLogin(account.id, 1, dataFormServer.accessToken!),
-            print('tự động đăng nhập thành công')
-          }
-        });
+        if(await AccountHandler.checkIsLogin() == false){
+          AuthorizationController.loginHandler(account.sdt, account.passwd).then((dataFormServer) => {
+            if(dataFormServer.errCode != 0){
+              AccountHandler.setStateLogin(account.id, 0, ''),
+            }else{
+              AccountHandler.setStateLogin(account.id, 1, dataFormServer.accessToken!),
+              print('tự động đăng nhập thành công')
+            }
+          });
+        }
       }else{
         showDialogBox('Lỗi kết nối', 'Không có kết nối mạng. Hãy kiểm tra lại kết nối của bạn!');
       }

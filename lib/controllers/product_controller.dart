@@ -27,6 +27,22 @@ class ProductController {
     }
   }
 
+  static Future<FetchListProduct> fetchSearchListProduct(int page, int limit, String search, String category,
+            String nameroom,String price, String idCatParent) async {
+    final response = await http.get(
+        Uri.parse(
+            '${ShareString.URL_API}/products/'
+                '?page=$page&limit=$limit&category=$category&price=$price&typeroom=$nameroom&search=$search&catparent=$idCatParent')
+    );
+    if (response.statusCode == 200) {
+      return compute(parseResultsListProduct, response.body);
+    } else if (response.statusCode == 404) {
+      throw Exception('Not Found');
+    } else {
+      throw Exception('Can\'t get results');
+    }
+  }
+
   static Future<FetchListProduct> fetchListSimilarProduct(int page, int limit, String category) async {
     final response = await http.get(Uri.parse('${ShareString.URL_API}/products/similar/?page=$page&limit=$limit&category=$category'));
     if (response.statusCode == 200) {

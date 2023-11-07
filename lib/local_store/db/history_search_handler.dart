@@ -1,5 +1,5 @@
 import 'package:furniture_mcommerce_app/local_store/db/furiture_shop_database.dart';
-import 'package:furniture_mcommerce_app/models/item_history_search.dart';
+import 'package:furniture_mcommerce_app/models/localstore/item_history_search.dart';
 import 'package:sqflite/sqflite.dart';
 
 class HistorySearchHandler {
@@ -20,6 +20,36 @@ class HistorySearchHandler {
     return maps.length;
   }
 
+  static Future<int> lastIndex() async {
+    Database db = await FurnitureShopDatabase.getInstance();
+    List<Map<String, dynamic>> maps =
+    await db.query(FurnitureShopDatabase.NAME_TABLE_HISTORY_SEARCH);
+
+    int maxindex = 0;
+    if (maps.isNotEmpty) {
+      for (var i = 0; i < maps.length; i++) {
+        if(maps[i]['id'] > maxindex){
+          maxindex = maps[i]['id'];
+        }
+      }
+    }
+    return maxindex;
+  }
+
+  static Future<bool>checkHistorySearch(String text) async {
+    Database db = await FurnitureShopDatabase.getInstance();
+    List<Map<String, dynamic>> maps =
+    await db.query(FurnitureShopDatabase.NAME_TABLE_HISTORY_SEARCH);
+    if (maps.isNotEmpty) {
+      for (var i = 0; i < maps.length; i++) {
+          if(text == maps[i]['text']){
+            return true;
+          }
+      }
+    }
+    return false;
+  }
+
   static Future<List<ItemHistorySearch>> getListItemHistorySearch() async {
     Database db = await FurnitureShopDatabase.getInstance();
     List<Map<String, dynamic>> maps =
@@ -37,7 +67,7 @@ class HistorySearchHandler {
     Database db = await FurnitureShopDatabase.getInstance();
     return await db.update(
         FurnitureShopDatabase.NAME_TABLE_HISTORY_SEARCH, item.toMap(),
-        where: 'id = ? and id_user = ?', whereArgs: [item.id, item.id_user]);
+        where: 'id = ? and idUser = ?', whereArgs: [item.id, item.idUser]);
   }
 
   static Future<void> deleteAll() async {
@@ -45,10 +75,10 @@ class HistorySearchHandler {
     await db.delete(FurnitureShopDatabase.NAME_TABLE_HISTORY_SEARCH);
   }
 
-  static Future<int> deleteItemHistorySearch(int id, String id_user) async {
+  static Future<int> deleteItemHistorySearch(int id, String idUser) async {
     Database db = await FurnitureShopDatabase.getInstance();
     return await db.delete(FurnitureShopDatabase.NAME_TABLE_HISTORY_SEARCH,
-        where: 'id = ? AND id_user = ?', whereArgs: [id, id_user]);
+        where: 'id = ? AND idUser = ?', whereArgs: [id, idUser]);
   }
 
   static Future close() async {

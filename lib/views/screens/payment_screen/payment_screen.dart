@@ -7,6 +7,7 @@ import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:flutter_stripe/flutter_stripe.dart'hide Card;
 import 'package:furniture_mcommerce_app/controllers/discount_controller.dart';
 import 'package:furniture_mcommerce_app/controllers/order_controller.dart';
+import 'package:furniture_mcommerce_app/local_store/db/itemcart_handler.dart';
 import 'package:furniture_mcommerce_app/local_store/db/shipping_address_handler.dart';
 import 'package:furniture_mcommerce_app/models/ItemOrder.dart';
 import 'package:furniture_mcommerce_app/models/discount.dart';
@@ -15,6 +16,7 @@ import 'package:furniture_mcommerce_app/models/methodpayment.dart';
 import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/add_shipping_address.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/add_shipping_address/shipping_address.dart';
+import 'package:furniture_mcommerce_app/views/screens/payment_screen/order_success_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_discount/select_discount_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_pay/select_pay_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_ship/select_ship_screen.dart';
@@ -23,6 +25,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../local_store/db/account_handler.dart';
 import '../../../models/localstore/itemcart.dart';
+import '../../../shared_resources/share_method.dart';
 import '../../../shared_resources/share_string.dart';
 import '../login_screen/login_screen.dart';
 
@@ -42,7 +45,9 @@ class PaymentScreen extends StatefulWidget {
 class PaymentScreenState extends State<PaymentScreen> {
   PaymentScreenState({required this.list});
   List<ItemCart> list;
+  List<ItemOrder> itemorders = [];
   bool validDiscount = false;
+  bool statusPayment = false;
   double _totalOrder = 0;
   double _totalProductPrice = 0;
 
@@ -56,7 +61,7 @@ class PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> makePayment() async {
     try {
-      paymentIntent = await createPaymentIntent('10000', 'INR');
+      paymentIntent = await createPaymentIntent(_totalOrder.toInt().toString(), 'VND');
 
       await Stripe.instance
           .initPaymentSheet(
@@ -70,7 +75,7 @@ class PaymentScreenState extends State<PaymentScreen> {
       )
           .then((value) {
         log("Success");
-      });
+        });
 
       displayPaymentSheet(); // Payment Sheet
     } catch (e, s) {
@@ -99,13 +104,32 @@ class PaymentScreenState extends State<PaymentScreen> {
                         color: Colors.green,
                       ),
                     ),
-                    Text("Payment Successfull"),
+                    Text("Thanh toán thành công"),
                   ],
                 ),
               ],
             ),
           ),
         );
+
+          statusPayment = true;
+          OrderController.createOrder(
+              _methodshinpping.idShipment!,
+              shippingAddress!.idUser,
+              _methodpayment.idPayment!,
+              shippingAddress!.name,
+              shippingAddress!.sdt,
+              shippingAddress!.address,
+              _totalOrder,
+              statusPayment,
+              itemorders).then((dataFormServer) => {
+            if(dataFormServer.errCode == 0){
+              ItemCartHandler.deleteAll(),
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OrderSuccessScreen()))
+            }else{
+              showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
+            }
+          });
 
         paymentIntent = null;
       }).onError((error, stackTrace) {
@@ -121,7 +145,7 @@ class PaymentScreenState extends State<PaymentScreen> {
   }
 
   calculateAmount(String amount) {
-    final calculatedAmout = (int.parse(amount)) * 100;
+    final calculatedAmout = (int.parse(amount));
     return calculatedAmout.toString();
   }
 
@@ -130,7 +154,7 @@ class PaymentScreenState extends State<PaymentScreen> {
 
       // TODO: Request body
       Map<String, dynamic> body = {
-        'amount': calculateAmount(amount),
+        'amount':calculateAmount(amount),
         'currency': currency,
         'payment_method_types[]': 'card'
       };
@@ -139,7 +163,7 @@ class PaymentScreenState extends State<PaymentScreen> {
       var response = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
         headers: {
-          'Authorization': 'Bearer ' + clientKey, //SecretKey used here
+          'Authorization': 'Bearer $clientKey', //SecretKey used here
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: body,
@@ -152,6 +176,7 @@ class PaymentScreenState extends State<PaymentScreen> {
       log('err charging user: ${err.toString()}');
     }
   }
+
   @override
   void initState() {
     _getShippingAddressDefault();
@@ -764,55 +789,53 @@ class PaymentScreenState extends State<PaymentScreen> {
                           fontWeight: FontWeight.w600,
                           fontSize: 20)),
                   onPressed: () async {
-                    //showAlertDialog(context);
-                    //Navigator.of(context).pop(context);
-                    // if(shippingAddress == null){
-                    //   showDialogBox('Thông báo', 'Bạn phải thêm địa chỉ giao hàng.', ShareString.CLOSE_DIALOG);
-                    //   return;
-                    // }
-                    //
-                    // if(_methodshinpping.idShipment == null){
-                    //   showDialogBox('Thông báo', 'Bạn phải chọn phương thức vận chuyển.', ShareString.CLOSE_DIALOG);
-                    //   return;
-                    // }
-                    //
-                    // if(_methodpayment.idPayment == null){
-                    //   showDialogBox('Thông báo', 'Bạn phải chọn phương thức thanh toán.', ShareString.CLOSE_DIALOG);
-                    //   return;
-                    // }
-                    // List<ItemOrder> itemorders = [];
-                    // for(var item in list){
-                    //     ItemOrder itemorder = ItemOrder(idProduct: item.idProduct, numProduct: item.quantity);
-                    //     itemorders.add(itemorder);
-                    // }
-                    // if(_methodpayment.idPayment == 'PM1'){
-                    //     //Thanh toán trực tiếp
-                    //   OrderController.createOrder(
-                    //       _methodshinpping.idShipment!,
-                    //       shippingAddress!.idUser,
-                    //       _methodpayment.idPayment!,
-                    //       shippingAddress!.name,
-                    //       shippingAddress!.sdt,
-                    //       shippingAddress!.address,
-                    //       _totalOrder,
-                    //       false,
-                    //       itemorders).then((dataFormServer) => {
-                    //           if(dataFormServer.errCode == 0){
-                    //               showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
-                    //           }else{
-                    //               showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
-                    //           }
-                    //   });
-                    //
-                    // }
-                    // else if(_methodpayment.idPayment == 'PM2'){
-                    //     //Thanh toán qua thẻ tín dụng
-                    // }
-                    //
-                    // print('${_methodshinpping.idShipment} + ${shippingAddress!.idUser} + ${_methodpayment!.idPayment}'
-                    //     ' + ${shippingAddress!.name} + ${shippingAddress!.sdt} + ${shippingAddress!.address}'
-                    //     ' + ${_totalOrder} + ${true}');
-                    makePayment();
+                    if (await ShareMethod.checkInternetConnection(context)) {
+                      if(shippingAddress == null){
+                        showDialogBox('Thông báo', 'Bạn phải thêm địa chỉ giao hàng.', ShareString.CLOSE_DIALOG);
+                        return;
+                      }
+
+                      if(_methodshinpping.idShipment == null){
+                        showDialogBox('Thông báo', 'Bạn phải chọn phương thức vận chuyển.', ShareString.CLOSE_DIALOG);
+                        return;
+                      }
+
+                      if(_methodpayment.idPayment == null){
+                        showDialogBox('Thông báo', 'Bạn phải chọn phương thức thanh toán.', ShareString.CLOSE_DIALOG);
+                        return;
+                      }
+                      //Tạo danh sách sản phẩm orders
+                      for(var item in list){
+                        ItemOrder itemorder = ItemOrder(idProduct: item.idProduct, numProduct: item.quantity);
+                        itemorders.add(itemorder);
+                      }
+                      if(_methodpayment.idPayment == 'PM1'){
+                        //Thanh toán trực tiếp
+                        OrderController.createOrder(
+                            _methodshinpping.idShipment!,
+                            shippingAddress!.idUser,
+                            _methodpayment.idPayment!,
+                            shippingAddress!.name,
+                            shippingAddress!.sdt,
+                            shippingAddress!.address,
+                            _totalOrder,
+                            statusPayment,
+                            itemorders).then((dataFormServer) => {
+                          if(dataFormServer.errCode == 0){
+                            ItemCartHandler.deleteAll(),
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OrderSuccessScreen()))
+                          }else{
+                            showDialogBox('Thông báo', dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
+                          }
+                        });
+                      }
+                      else if(_methodpayment.idPayment == 'PM2'){
+                        //Thanh toán qua thẻ tín dụng
+                        makePayment();
+                      }
+                    }else{
+                      showDialogBox("Lỗi kết nối mạng", 'Không có kết nối mạng. Hãy kiểm tra lại kết nối của bạn!', ShareString.CLOSE_DIALOG);
+                    }
                   },
                 ),
               ),
@@ -938,32 +961,5 @@ class PaymentScreenState extends State<PaymentScreen> {
                 ))
           ],
         ));
-  }
-
-  showAlertDialog(BuildContext context) {
-    // Create button
-    Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    // Create AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Thông báo đặt hàng"),
-      content: Text("Đã đặt hàng thành công."),
-      actions: [
-        okButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
   }
 }
