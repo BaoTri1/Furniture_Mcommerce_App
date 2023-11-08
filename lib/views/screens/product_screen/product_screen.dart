@@ -20,6 +20,7 @@ import '../../../local_store/db/account_handler.dart';
 import '../../../local_store/db/itemfavorite_handler.dart';
 import '../../../models/states/provider_itemfavorite.dart';
 import '../../../shared_resources/share_string.dart';
+import '../cart_screen/cart_screen.dart';
 import '../home_screen/product_item.dart';
 
 // ignore: must_be_immutable
@@ -180,6 +181,9 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                             Navigator.pop(context, _product);
                           },
                         ),
+                        actions: [
+                          _buildIconCart(context)
+                        ],
                         backgroundColor: Colors.white,
                         expandedHeight: 300.0,
                         pinned: true,
@@ -652,6 +656,60 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
         ),
       ),
     );
+  }
+
+  Widget _buildIconCart(BuildContext context) {
+    final itemCartState = Provider.of<ProviderItemCart>(context, listen: true);
+    return IconButton(
+      padding: const EdgeInsets.only(right: 12),
+      onPressed: () async {
+        if(await AccountHandler.checkIsLogin()) {
+          // ignore: use_build_context_synchronously
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const CartScreen()));
+        }
+      },
+      icon: Stack(children: [
+        const SizedBox(
+          width: 40,
+          height: 30,
+        ),
+        const Positioned(
+          top: 4,
+          child: SvgIcon(
+            icon: SvgIconData('assets/icons/icon_cart.svg'),
+            responsiveColor: false,
+            color: Color(0xff808080),
+            size: 24,
+          ),
+        ),
+        itemCartState.getCountItemCart > 0 ?
+        Positioned(
+          right: itemCartState.getCountItemCart > 99 ? 0: 6,
+          top: 0,
+          child: Container(
+            padding: const EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 12,
+              minHeight: 12,
+            ),
+            child: Text(
+              itemCartState.getCountItemCart > 99 ?
+              '+99' : '${itemCartState.getCountItemCart}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        )
+            : const SizedBox()]),);
   }
 
   void showDialogBox(String title, String message, String action) {

@@ -5,6 +5,7 @@ import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
 import 'package:furniture_mcommerce_app/views/screens/cart_screen/cart_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/home_screen/list_room.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/product_item.dart';
 import 'package:furniture_mcommerce_app/views/screens/home_screen/list_category.dart';
 import 'package:furniture_mcommerce_app/views/screens/search_screen/search_screen.dart';
@@ -128,7 +129,7 @@ class HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.only(left: 10, top: 10),
                   child: const Text(
-                    'Danh mục',
+                    'Nhóm danh mục',
                     style: TextStyle(
                         fontFamily: 'Gelasio',
                         fontWeight: FontWeight.w700,
@@ -143,6 +144,25 @@ class HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(
                 child: Container(
                   padding: const EdgeInsets.only(left: 10, top: 10),
+                  child: const Text(
+                    'Loại phòng',
+                    style: TextStyle(
+                        fontFamily: 'Gelasio',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: Color(0xff242424)),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child:  Container(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: const ListRoomWidget(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.only(left: 10, top: 20),
                   child: const Text(
                     'Hôm nay mua gì?',
                     style: TextStyle(

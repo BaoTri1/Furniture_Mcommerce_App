@@ -53,6 +53,7 @@ class ProductSearchState extends State<ProductSearch> {
 
   @override
   void initState() {
+    if(nameRoom.isNotEmpty) nameroom = nameRoom;
     _controller.addListener(_onScroll);
     _getProducts();
     _getListCategory();
@@ -133,17 +134,17 @@ class ProductSearchState extends State<ProductSearch> {
           backgroundColor: Colors.white,
           title: RichText(
               textAlign: TextAlign.center,
-              text: TextSpan(children: <TextSpan>[
-                const TextSpan(
-                    text: 'Từ khóa: ',
+              text: const TextSpan(children: <TextSpan>[
+                TextSpan(
+                    text: 'Make home\n',
                     style: TextStyle(
                         fontFamily: 'Gelasio',
                         fontWeight: FontWeight.w400,
                         fontSize: 16,
                         color: Color(0xff909090))),
                 TextSpan(
-                    text: search,
-                    style: const TextStyle(
+                    text: 'BEAUTIFUL',
+                    style: TextStyle(
                         fontFamily: 'Gelasio',
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
@@ -507,7 +508,7 @@ class ProductSearchState extends State<ProductSearch> {
                 SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.only(left: 10, top: 30),
-                    child: const Text(
+                    child: nameRoom.isEmpty ? const Text(
                       "Loại phòng",
                       style: TextStyle(
                           fontFamily: 'NunitoSans',
@@ -515,16 +516,17 @@ class ProductSearchState extends State<ProductSearch> {
                           fontSize: 16,
                           color: Color(0xff303030)
                       ),
-                    ),
+                    ) : const SizedBox(),
                   ),
                 ),
-                SliverPadding(
+                nameRoom.isEmpty ? SliverPadding(
                   padding: const EdgeInsets.only(top: 10, left: 5, right: 5),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
                                 return GestureDetector(
                                     onTap: ()  {
                                       setState((){
+                                        nameroom == _listRoom[index] ? nameroom = '' :
                                         nameroom = _listRoom[index];
                                       });
                                     },
@@ -549,7 +551,7 @@ class ProductSearchState extends State<ProductSearch> {
 
                     ),
                   ),
-                ),
+                ) : const SliverToBoxAdapter(),
                 SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.only(left: 10, top: 30),
@@ -614,6 +616,8 @@ class ProductSearchState extends State<ProductSearch> {
                             maxprice = '1000000000';
                             selectPrice = '';
                             _products.clear();
+                            _page = 1;
+                            _canLoadMore = false;
                             print('$category + $nameroom + $minprice + $maxprice');
                           });
                           _getProducts();
@@ -644,6 +648,8 @@ class ProductSearchState extends State<ProductSearch> {
                           print('$category + $nameroom + $minprice + $maxprice');
                           setState(() {
                               _products.clear();
+                              _page = 1;
+                              _canLoadMore = false;
                           });
                           _getProducts();
                           _scaffoldKey.currentState?.closeEndDrawer();

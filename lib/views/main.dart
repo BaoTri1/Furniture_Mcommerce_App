@@ -7,6 +7,7 @@ import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtocart.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtofavorite.dart';
+import 'package:furniture_mcommerce_app/views/screens/order_screen/order_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/order_success_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_discount/select_discount_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/search_screen/product_search.dart';
@@ -67,7 +68,7 @@ class MyApp extends StatelessWidget {
               SystemNavigator.pop();
               return true; // Trả về true vì SystemNavigator.pop() sẽ làm thoát ứng dụng.
             },
-            child: const MainScreen(),
+            child: const OrderScreen(),
         )
       ),
     );
@@ -110,7 +111,7 @@ class MainScreenState extends State<MainScreen> {
       print('${account.sdt} + ${account.passwd}');
       // ignore: use_build_context_synchronously
       if(await ShareMethod.checkInternetConnection(context)){
-        if(await AccountHandler.checkIsLogin() == false){
+        if(await AccountHandler.checkIsLogin() == true){
           AuthorizationController.loginHandler(account.sdt, account.passwd).then((dataFormServer) => {
             if(dataFormServer.errCode != 0){
               AccountHandler.setStateLogin(account.id, 0, ''),
