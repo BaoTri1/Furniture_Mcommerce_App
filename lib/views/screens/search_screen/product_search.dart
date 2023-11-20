@@ -50,6 +50,7 @@ class ProductSearchState extends State<ProductSearch> {
   String price = '0-1000000000';
 
   String selectPrice = '';
+  String rat = '0.0';
 
   @override
   void initState() {
@@ -64,7 +65,7 @@ class ProductSearchState extends State<ProductSearch> {
 
   void _getProducts() {
     _loading = true;
-    ProductController.fetchSearchListProduct(_page, _limit, search, category, nameroom, '$minprice-$maxprice', idcatParent).then((dataFormServer) => {
+    ProductController.fetchSearchListProduct(_page, _limit, search, category, nameroom, '$minprice-$maxprice', idcatParent, rat).then((dataFormServer) => {
       if(dataFormServer.errCode == 0){
         setState(() {
           _totalPage = dataFormServer.totalPage!;
@@ -573,20 +574,20 @@ class ProductSearchState extends State<ProductSearch> {
                       return GestureDetector(
                           onTap: ()  {
                             setState((){
-
+                                rat = rating[index].toString();
                             });
                           },
                           child: Container(
                               padding: const EdgeInsets.all(5),
-                              color:  const Color(0xffE8E8E8),
+                              color:  rat == rating[index].toString() ? Colors.black : const Color(0xffE8E8E8),
                               child: Text(
                                 rating[index] == 5 ? '${rating[index]} sao' : 'Từ ${rating[index]} sao',
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontFamily: 'NunitoSans',
                                     fontWeight: FontWeight.w400,
                                     fontSize: 18,
-                                    color: Color(0xff303030)),
+                                    color: rat == rating[index].toString() ? Colors.white : const Color(0xff303030)),
                               )));},
                         childCount: rating.length),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -615,10 +616,11 @@ class ProductSearchState extends State<ProductSearch> {
                             minprice = '0';
                             maxprice = '1000000000';
                             selectPrice = '';
+                            rat = '0.0';
                             _products.clear();
                             _page = 1;
                             _canLoadMore = false;
-                            print('$category + $nameroom + $minprice + $maxprice');
+                            print('$category + $nameroom + $minprice + $maxprice + $rat');
                           });
                           _getProducts();
                           _scaffoldKey.currentState?.closeEndDrawer();

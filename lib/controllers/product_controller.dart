@@ -28,11 +28,12 @@ class ProductController {
   }
 
   static Future<FetchListProduct> fetchSearchListProduct(int page, int limit, String search, String category,
-            String nameroom,String price, String idCatParent) async {
+            String nameroom,String price, String idCatParent, String rating) async {
     final response = await http.get(
         Uri.parse(
             '${ShareString.URL_API}/products/'
-                '?page=$page&limit=$limit&category=$category&price=$price&typeroom=$nameroom&search=$search&catparent=$idCatParent')
+                '?page=$page&limit=$limit&category=$category&price=$price'
+                '&typeroom=$nameroom&search=$search&catparent=$idCatParent&rating=$rating')
     );
     if (response.statusCode == 200) {
       return compute(parseResultsListProduct, response.body);
