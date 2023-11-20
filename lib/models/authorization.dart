@@ -33,6 +33,32 @@ class Authorization {
   }
 }
 
+class FetchInfoUser {
+  int? errCode;
+  String? errMessage;
+  User? userData;
+
+  FetchInfoUser({this.errCode, this.errMessage, this.userData});
+
+  FetchInfoUser.fromJson(Map<String, dynamic> json) {
+    errCode = json['errCode'];
+    errMessage = json['errMessage'];
+    userData = json['userData'] != null
+        ? new User.fromJson(json['userData'])
+        : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['errCode'] = this.errCode;
+    data['errMessage'] = this.errMessage;
+    if (this.userData != null) {
+      data['userData'] = this.userData!.toJson();
+    }
+    return data;
+  }
+}
+
 class User {
   String? idUser;
   String? idAcc;

@@ -1,15 +1,21 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtocart.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_animationaddtofavorite.dart';
+import 'package:furniture_mcommerce_app/views/screens/profile_screen/edit_profile.dart';
+import 'package:furniture_mcommerce_app/views/screens/order_screen/order_detail.dart';
 import 'package:furniture_mcommerce_app/views/screens/order_screen/order_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/order_success_screen.dart';
 import 'package:furniture_mcommerce_app/views/screens/payment_screen/select_discount/select_discount_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/profile_screen/detail_profile.dart';
+import 'package:furniture_mcommerce_app/views/screens/rating_screen/rating_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/rating_screen/write_review.dart';
 import 'package:furniture_mcommerce_app/views/screens/search_screen/product_search.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -34,6 +40,13 @@ import 'package:furniture_mcommerce_app/views/screens/boarding_screen/boarding_s
 void main() async{
   await dotenv.load(fileName: ".env");
   Stripe.publishableKey = dotenv.env["PUBLISHABLE_KEY"] ?? "";
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  FirebaseMessaging.instance.getToken().then((value) => {
+      print("get token: $value")
+  });
+
   runApp(const MyApp());
 }
 
@@ -68,7 +81,7 @@ class MyApp extends StatelessWidget {
               SystemNavigator.pop();
               return true; // Trả về true vì SystemNavigator.pop() sẽ làm thoát ứng dụng.
             },
-            child: const OrderScreen(),
+            child: MainScreen(),
         )
       ),
     );
@@ -162,7 +175,7 @@ class MainScreenState extends State<MainScreen> {
   List<Widget> screenList = [
     const HomeScreen(),
     const FavoritesScreen(),
-    const NotificationScreen(),
+    //const NotificationScreen(),
     const ProfileScreen()
   ];
 
@@ -228,16 +241,16 @@ class MainScreenState extends State<MainScreen> {
                   ]),
                   label: '',
                 ),
-                BottomNavigationBarItem(
-                  icon: SvgIcon(
-                      icon: _selectedIndex == 2
-                          ? const SvgIconData('assets/icons/icon_bell_selected.svg')
-                          : const SvgIconData('assets/icons/icon_bell.svg')),
-                  label: '',
-                ),
+                // BottomNavigationBarItem(
+                //   icon: SvgIcon(
+                //       icon: _selectedIndex == 2
+                //           ? const SvgIconData('assets/icons/icon_bell_selected.svg')
+                //           : const SvgIconData('assets/icons/icon_bell.svg')),
+                //   label: '',
+                // ),
                 BottomNavigationBarItem(
                     icon: SvgIcon(
-                        icon: _selectedIndex == 3
+                        icon: _selectedIndex == 2
                             ? const SvgIconData('assets/icons/icon_user_selected.svg')
                             : const SvgIconData('assets/icons/icon_user.svg')),
                     label: ''),

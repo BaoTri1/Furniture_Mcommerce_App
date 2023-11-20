@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/shared_resources/share_string.dart';
 import 'package:furniture_mcommerce_app/views/screens/order_screen/list_order.dart';
 
 class OrderScreen extends StatefulWidget{
@@ -20,7 +21,7 @@ class OrderScreenState extends State<OrderScreen>{
       debugShowCheckedModeBanner: false,
       title: "OrderScreen",
       home: DefaultTabController(
-        length: 3,
+        length: 5,
         child: Scaffold(
             appBar: AppBar(
               backgroundColor: Colors.white,
@@ -44,10 +45,11 @@ class OrderScreenState extends State<OrderScreen>{
                 },
               ),
               bottom: const TabBar(
+                isScrollable: true,
                 tabs: [
                   Tab(
                     child: Text(
-                        'Đã giao',
+                        ShareString.DANG_XU_LY,
                         style: TextStyle(
                             fontFamily: 'NunitoSans',
                             fontWeight: FontWeight.w700,
@@ -58,7 +60,7 @@ class OrderScreenState extends State<OrderScreen>{
                   ),
                   Tab(
                       child: Text(
-                        'Đang xử lý',
+                        ShareString.SAN_SANG_GIAO_HANG,
                         style: TextStyle(
                             fontFamily: 'NunitoSans',
                             fontWeight: FontWeight.w700,
@@ -69,12 +71,34 @@ class OrderScreenState extends State<OrderScreen>{
                   ),
                   Tab(
                       child: Text(
-                        'Đã hủy',
+                        ShareString.DANG_GIAO_HANG,
                         style: TextStyle(
                             fontFamily: 'NunitoSans',
                             fontWeight: FontWeight.w700,
                             fontSize: 18,
                             //color: Color(0xff999999)
+                        ),
+                      )
+                  ),
+                  Tab(
+                      child: Text(
+                        ShareString.DA_GIAO_HANG_THANH_CONG,
+                        style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          //color: Color(0xff999999)
+                        ),
+                      )
+                  ),
+                  Tab(
+                      child: Text(
+                        ShareString.DA_HUY,
+                        style: TextStyle(
+                          fontFamily: 'NunitoSans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          //color: Color(0xff999999)
                         ),
                       )
                   ),
@@ -85,7 +109,11 @@ class OrderScreenState extends State<OrderScreen>{
             ),
             body: TabBarView(
               children: [
-                ListOrder(status: '')
+                ListOrder(status: ShareString.DANG_XU_LY),
+                ListOrder(status: ShareString.SAN_SANG_GIAO_HANG),
+                ListOrder(status: ShareString.DANG_GIAO_HANG),
+                ListOrder(status: ShareString.DA_GIAO_HANG_THANH_CONG),
+                ListOrder(status: ShareString.DA_HUY),
               ],
             ),
         ),

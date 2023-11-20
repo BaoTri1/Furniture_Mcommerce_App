@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:furniture_mcommerce_app/controllers/otherservice_controller.dart';
 import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
-import 'package:furniture_mcommerce_app/models/item_pay.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../models/methodpayment.dart';
@@ -123,14 +122,3 @@ class SelectPayState extends State<SelectPay> {
     );
   }
 }
-
-List<ItemPay> _listPay = [
-  ItemPay(
-      id: '1',
-      name: "Thanh toán trực tiếp khi nhận hàng.",
-      icon: 'assets/icons/icon_paying_by_cash.svg'),
-  ItemPay(
-      id: '2',
-      name: "Thanh toán bằng thẻ tín dụng.",
-      icon: 'assets/icons/icon_paying_by_redict.svg'),
-];

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+//import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/models/localstore/itemcart.dart';
 import 'package:furniture_mcommerce_app/models/product.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
@@ -53,8 +53,8 @@ class ProductItem extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       fontSize: 14,
                       color: Color(0xff606060)),
-                      softWrap: true,
-                      overflow: TextOverflow.clip,
+                  softWrap: true,
+                  overflow: TextOverflow.clip,
                 ),
               )),
           Positioned(
@@ -67,7 +67,7 @@ class ProductItem extends StatelessWidget {
                     fontFamily: 'NunitoSans',
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: productInfor.value == null ? Color(0xff303030) : Colors.red    ),
+                    color: productInfor.value == null ? const Color(0xff303030) : Colors.red),
               )),
           productInfor.value == null ? const SizedBox() :
             Positioned(
@@ -112,7 +112,7 @@ class ProductItem extends StatelessWidget {
                             showDialogBox(context, "Thông báo", dataFormServer.errMessage!, ShareString.CLOSE_DIALOG),
                           }else {
                             ItemCartHandler.updateQuantityItemCart(productInfor.idProduct!, idUser, oldQuantity + 1),
-                            Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT)
+                            //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT)
                           }
                         });
                       }else{
@@ -130,7 +130,7 @@ class ProductItem extends StatelessWidget {
                                 quantity: 1,
                                 urlImg: productInfor.imgUrl!),
                             ItemCartHandler.insertItemCart(itemCart),
-                            Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
+                            //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
                             ItemCartState.reloadCountItemCart()
                           }
                         });

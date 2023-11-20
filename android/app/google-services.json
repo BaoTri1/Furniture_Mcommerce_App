@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "774348553366",
+    "project_id": "furituremcommeceapp",
+    "storage_bucket": "furituremcommeceapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:774348553366:android:16e813614d4bf3a05e96b7",
+        "android_client_info": {
+          "package_name": "com.example.furniture_mcommerce_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeazHktY33B5tWKgrNFD3q6SRb6VGSAfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

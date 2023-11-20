@@ -1,6 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:furniture_mcommerce_app/controllers/order_controller.dart';
+import 'package:furniture_mcommerce_app/shared_resources/share_string.dart';
+import 'package:furniture_mcommerce_app/views/screens/order_screen/order_detail.dart';
 import 'package:intl/intl.dart';
+
+import '../../../local_store/db/account_handler.dart';
+import '../../../models/order.dart';
 
 // ignore: must_be_immutable
 class ListOrder extends StatefulWidget {
@@ -19,14 +26,94 @@ class ListOrderState extends State<ListOrder> {
   ListOrderState({required this.status});
   String status;
 
+  final List<Order> _list = [];
+  bool hidden = false;
+
+  @override
+  void initState() {
+    _getListOrder();
+    super.initState();
+  }
+
+  void _getListOrder() async {
+    String idUser = await AccountHandler.getIdUser();
+    print(idUser);
+    if(idUser.isEmpty) return;
+    if(status == ShareString.DANG_XU_LY){
+      OrderController.getListOrderProcess(idUser).then((dataFormServer) => {
+          if(dataFormServer.errCode == 0){
+              setState((){
+                  _list.addAll(dataFormServer.orders!);
+
+              })
+          }else{
+              setState((){
+                hidden = true;
+              })
+          }
+      });
+    }else if(status == ShareString.SAN_SANG_GIAO_HANG){
+      OrderController.getListOrderReadyDelivery(idUser).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+          setState((){
+            _list.addAll(dataFormServer.orders!);
+
+          })
+        }else{
+          setState((){
+            hidden = true;
+          })
+        }
+      });
+    }else if(status == ShareString.DANG_GIAO_HANG){
+      OrderController.getListOrderDelivering(idUser).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+          setState((){
+            _list.addAll(dataFormServer.orders!);
+
+          })
+        }else{
+          setState((){
+            hidden = true;
+          })
+        }
+      });
+    }else if(status == ShareString.DA_GIAO_HANG_THANH_CONG){
+      OrderController.getListOrderDelivered(idUser).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+          setState((){
+            _list.addAll(dataFormServer.orders!);
+
+          })
+        }else{
+          setState((){
+            hidden = true;
+          })
+        }
+      });
+    }else if(status == ShareString.DA_HUY){
+      OrderController.getListOrderCancel(idUser).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+          setState((){
+            _list.addAll(dataFormServer.orders!);
+
+          })
+        }else{
+          setState((){
+            hidden = true;
+          })
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return hidden == true ? _buildNoteNoItem(context) : Container(
       margin: const EdgeInsets.only(top: 30),
       child: ListView.builder(
           itemBuilder: _buildItem,
-          itemCount: 4,
+          itemCount: _list.length,
       ),
     );
   }
@@ -54,20 +141,20 @@ class ListOrderState extends State<ListOrder> {
                 children: [
                   Container(
                     margin: const EdgeInsets.all(10),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Order No238562312',
-                          style: TextStyle(
+                          _list[index].idOrder!,
+                          style: const TextStyle(
                               fontFamily: 'NunitoSans',
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                               color: Color(0xff303030)),
                         ),
                         Text(
-                          '20/03/2020',
-                          style: TextStyle(
+                          DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(_list[index].dayCreateAt!)),
+                          style: const TextStyle(
                               fontFamily: 'NunitoSans',
                               fontWeight: FontWeight.w400,
                               fontSize: 14,
@@ -88,8 +175,8 @@ class ListOrderState extends State<ListOrder> {
                       children: [
                         RichText(
                             textAlign: TextAlign.center,
-                            text: const TextSpan(children: <TextSpan>[
-                              TextSpan(
+                            text: TextSpan(children: <TextSpan>[
+                              const TextSpan(
                                   text: 'Số lượng: ',
                                   style: TextStyle(
                                       fontFamily: 'NunitoSans',
@@ -97,8 +184,8 @@ class ListOrderState extends State<ListOrder> {
                                       fontSize: 16,
                                       color: Color(0xff808080))),
                               TextSpan(
-                                  text: '3',
-                                  style: TextStyle(
+                                  text: _list[index].quantity!,
+                                  style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
                                       fontSize: 16,
@@ -116,7 +203,7 @@ class ListOrderState extends State<ListOrder> {
                                       color: Color(0xff808080))),
                               TextSpan(
                                   text: NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
-                                      .format(200000000),
+                                      .format(_list[index].total!),
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,
@@ -134,7 +221,8 @@ class ListOrderState extends State<ListOrder> {
                         ElevatedButton(
                           // ignore: avoid_print
                             onPressed: () async {
-
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (context) => OrderDetail(idOrder: _list[index].idOrder!)));
                             },
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xff242424),
@@ -149,13 +237,17 @@ class ListOrderState extends State<ListOrder> {
                                   fontWeight: FontWeight.w600,
                                   fontSize: 18),
                             )),
-                        const Text(
-                          'Đã giao',
+                        Text(
+                          _list[index].name!,
                           style: TextStyle(
                               fontFamily: 'NunitoSans',
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: Color(0xff27AE60)),
+                              fontSize: 18,
+                              color: status == ShareString.DA_GIAO_HANG_THANH_CONG ? const Color(0xff27AE60)
+                                  : (status == ShareString.DA_HUY ? Colors.red
+                                  :(status == ShareString.DANG_XU_LY ? Colors.amber
+                                  : (status == ShareString.SAN_SANG_GIAO_HANG ? Colors.blueAccent : const Color(0xff00EE76))))
+                          ),
                         ),
                       ],
                     ),
@@ -166,6 +258,33 @@ class ListOrderState extends State<ListOrder> {
           ),
         ),
       );
+  }
+
+
+  Widget _buildNoteNoItem(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+            margin: EdgeInsets.all(10),
+            width: 100,
+            height: 100,
+            child: const SvgIcon(
+                icon: SvgIconData('assets/icons/icon_order.svg'))),
+        Container(
+          margin: EdgeInsets.all(20),
+          child: const Text(
+            'Không có đơn hàng nào.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontFamily: 'Gelasio',
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                color: Color(0xff242424)),
+          ),
+        ),
+      ],
+    );
   }
 
 }

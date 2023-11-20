@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:furniture_mcommerce_app/local_store/db/itemcart_handler.dart';
 import 'package:furniture_mcommerce_app/models/localstore/itemcart.dart';
 import 'package:furniture_mcommerce_app/models/localstore/itemfavorite.dart';
+import 'package:furniture_mcommerce_app/models/rating.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
 import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/rating_screen/rating_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
@@ -16,6 +18,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../controllers/ratingandreview_controller.dart';
 import '../../../local_store/db/account_handler.dart';
 import '../../../local_store/db/itemfavorite_handler.dart';
 import '../../../models/states/provider_itemfavorite.dart';
@@ -53,12 +56,12 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
   late Product _product = Product();
   late final List<Product> _listProductSimilar = [];
   late List<String> listImage = [];
+  late Ratings ratings = Ratings();
   late PageController _pageController;
   int page = 1;
   int limit = 10;
   late int totalPage;
   int activePage = 0;
-  int review = 50;
   int quantity = 1;
 
   late ItemFavorite itemFavorite;
@@ -75,6 +78,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
     _getInfoProduct();
     _getSimilarProducts();
     _checkItemFavorite();
+    _getRating();
     super.initState();
   }
 
@@ -92,6 +96,16 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
       if(await ItemFavoriteHandler.checkItemFavorite(id, idUser)){
         _isFavorite = true;
       }
+  }
+
+  void _getRating() {
+    RatingAndReviewController.fetchRating(id).then((dataFormServer) => {
+        if(dataFormServer.errCode == 0){
+            setState((){
+                ratings = dataFormServer.ratings!;
+            })
+        }
+    });
   }
 
   void _getInfoProduct() {
@@ -148,6 +162,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
     page = 1;
     _getInfoProduct();
     _getSimilarProducts();
+    _getRating();
     print('Refreshing...');
   }
 
@@ -165,8 +180,8 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
         body: RefreshIndicator(
           onRefresh: _refresh,
           child: Stack(
-          children: [
-            Skeletonizer(
+            children: [
+              Skeletonizer(
                 enabled: _enabled,
                 child: CustomScrollView(
                   controller: _controller,
@@ -192,7 +207,7 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                             children: [
                               SizedBox(
                                   width: MediaQuery.of(context).size.width,
-                                  height: 250,
+                                  height: 300,
                                   child: PageView.builder(
                                     itemCount: listImage.length,
                                     pageSnapping: true,
@@ -296,37 +311,56 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                         children: [
                           GestureDetector(
                             onTap: () {
-                              //print('mo danh gia' + this.name);
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) =>
+                                      RatingScreen(imgUrl: _product.imgUrl!,
+                                        idProduct: id, nameProduct: _product.nameProduct!)));
+                              // if(ratings.numReviews! > 0){
+                              //     Navigator.push(context,
+                              //         MaterialPageRoute(builder: (context) =>
+                              //             RatingScreen(rating: ratings, imgUrl: _product.imgUrl!, idProduct: id,)));
+                              // }
                             },
-                            child: Row(children: [
-                              const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 30,
+                            child: ratings.numReviews == 0 ? Container(
+                              margin:
+                              const EdgeInsets.only(top: 4, left: 4, right: 30),
+                              child: const Text(
+                                '(Chưa có đánh giá)',
+                                style: TextStyle(
+                                    fontFamily: 'NunitoSans',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 18,
+                                    color: Color(0xff808080)),
                               ),
-                              Container(
-                                margin: const EdgeInsets.only(top: 4),
-                                child: const Text(
-                                  '4.5',
-                                  style: TextStyle(
-                                      fontFamily: 'NunitoSans',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 18,
-                                      color: Color(0xff303030)),
-                                ),
-                              ),
-                              Container(
-                                margin:
-                                    const EdgeInsets.only(top: 4, left: 4, right: 30),
-                                child: Text(
-                                  '($review đánh giá)',
-                                  style: const TextStyle(
-                                      fontFamily: 'NunitoSans',
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 18,
-                                      color: Color(0xff808080)),
-                                ),
-                              ),
+                            ) : Row(children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 30,
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      ratings.aVGPoint ?? '',
+                                      style: const TextStyle(
+                                          fontFamily: 'NunitoSans',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 18,
+                                          color: Color(0xff303030)),
+                                    ),
+                                  ),
+                                  Container(
+                                    margin:
+                                        const EdgeInsets.only(top: 4, left: 4, right: 30),
+                                    child: Text(
+                                      '(${ratings.numReviews ?? ''} đánh giá)',
+                                      style: const TextStyle(
+                                          fontFamily: 'NunitoSans',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 18,
+                                          color: Color(0xff808080)),
+                                    ),
+                                  ),
                             ]),
                           ),
                           //Nút tang giam so luong
@@ -477,8 +511,8 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                     ),
                   ],
                 ),),
-            _buildPannelButton(context),
-            _showAnimationAddToCart ?
+              _buildPannelButton(context),
+              _showAnimationAddToCart ?
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -754,11 +788,3 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
         ));
   }
 }
-
-List<String> images = [
-  'assets/images/img_sofa.jpg',
-  'assets/images/img_sofa.jpg',
-  'assets/images/img_sofa.jpg',
-  'assets/images/img_sofa.jpg',
-  'assets/images/img_sofa.jpg',
-];

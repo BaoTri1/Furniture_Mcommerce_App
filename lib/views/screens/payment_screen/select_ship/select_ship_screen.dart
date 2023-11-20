@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:furniture_mcommerce_app/models/item_ship.dart';
 import 'package:furniture_mcommerce_app/models/methodshipping.dart';
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -126,18 +125,3 @@ class SelectShipState extends State<SelectShip> {
     );
   }
 }
-
-List<ItemShip> _listShip = [
-  ItemShip(
-      id: '1',
-      name: "giao hàng nhanh.",
-      fee: 20000.0,
-      timeShip: '2-3 ngày',
-      icon: 'assets/icons/icon_fast_delivery.svg'),
-  ItemShip(
-      id: '2',
-      name: "Giao hàng bình thường",
-      fee: 10000.0,
-      timeShip: '7-10 ngày',
-      icon: 'assets/icons/icon_delivery.svg'),
-];

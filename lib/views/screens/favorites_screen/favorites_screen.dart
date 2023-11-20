@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+//import 'package:fluttertoast/fluttertoast.dart';
 import 'package:furniture_mcommerce_app/local_store/db/account_handler.dart';
 import 'package:furniture_mcommerce_app/local_store/db/itemfavorite_handler.dart';
 import 'package:furniture_mcommerce_app/views/screens/product_screen/product_screen.dart';
@@ -146,7 +146,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                                         setState(() {
                                           _list.remove(item);
                                         }),
-                                        Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
+                                        //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
                                         itemCartState.reloadCountItemCart(),
                                         ItemFavoriteState.reloadCountItemFavorite()
                                       }
@@ -170,7 +170,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                                         setState(() {
                                           _list.remove(item);
                                         }),
-                                        Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
+                                        //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
                                         itemCartState.reloadCountItemCart(),
                                         ItemFavoriteState.reloadCountItemFavorite()
                                       }
@@ -295,7 +295,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                                 setState(() {
                                     _list.removeAt(index);
                                 }),
-                                Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
+                                //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
                                 itemCartState.reloadCountItemCart(),
                                 ItemFavoriteState.reloadCountItemFavorite()
                             }
@@ -319,7 +319,7 @@ class FavoritesScreenState extends State<FavoritesScreen> {
                                 setState(() {
                                   _list.removeAt(index);
                                 }),
-                                Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
+                                //Fluttertoast.showToast(msg: 'Đâ thêm sản phẩm vào giỏ hàng.', toastLength: Toast.LENGTH_SHORT),
                                 itemCartState.reloadCountItemCart(),
                                 ItemFavoriteState.reloadCountItemFavorite()
                             }
