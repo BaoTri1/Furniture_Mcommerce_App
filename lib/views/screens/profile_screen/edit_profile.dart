@@ -58,7 +58,7 @@ class EditProfileState extends State<EditProfile> {
     _controllerName = TextEditingController(text: user.fullName!);
     _controllerPhone = TextEditingController(text: user.sdtUser ?? '');
     _controllerEmail = TextEditingController(text: user.email ?? '');
-    selectedGender = user.gender ?? '';
+    selectedGender = user.gender ?? 'Nam';
     super.initState();
   }
 
@@ -341,11 +341,11 @@ class EditProfileState extends State<EditProfile> {
                               });
                           },
                           items: <String>['Nam', 'Nữ']
-                              .map((String value) {
+                              .map((String s) {
                             return DropdownMenuItem<String>(
-                              value: value,
+                              value: s,
                               child: Text(
-                                  value,
+                                  s,
                                   style: const TextStyle(
                                       fontFamily: 'NunitoSans',
                                       fontWeight: FontWeight.w700,

@@ -1,5 +1,4 @@
 // ignore_for_file: non_constant_identifier_names
-
 import 'package:flutter/material.dart';
 import 'package:furniture_mcommerce_app/local_store/db/itemcart_handler.dart';
 import 'package:furniture_mcommerce_app/models/localstore/itemcart.dart';
@@ -7,6 +6,7 @@ import 'package:furniture_mcommerce_app/models/localstore/itemfavorite.dart';
 import 'package:furniture_mcommerce_app/models/rating.dart';
 import 'package:furniture_mcommerce_app/models/states/provider_itemcart.dart';
 import 'package:furniture_mcommerce_app/views/screens/login_screen/login_screen.dart';
+import 'package:furniture_mcommerce_app/views/screens/product_screen/zoom_image.dart';
 import 'package:furniture_mcommerce_app/views/screens/rating_screen/rating_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -69,6 +69,8 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
   bool _isFavorite = false;
 
   late ItemCart itemCart;
+
+  double _scale = 1.0;
 
   @override
   void initState() {
@@ -203,45 +205,50 @@ class ProductScreenState extends State<ProductScreen> with TickerProviderStateMi
                         expandedHeight: 300.0,
                         pinned: true,
                         flexibleSpace: FlexibleSpaceBar(
-                          background: Column(
-                            children: [
-                              SizedBox(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 300,
-                                  child: PageView.builder(
-                                    itemCount: listImage.length,
-                                    pageSnapping: true,
-                                    controller: _pageController,
-                                    itemBuilder: (context, pagePosition) {
-                                      return Container(
-                                          width: MediaQuery.of(context).size.width,
-                                          //margin: const EdgeInsets.all(5),
-                                          decoration: BoxDecoration(
-                                              //color: Colors.amber,
-                                              image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      listImage[pagePosition]),
-                                                  fit: BoxFit.contain)));
-                                    },
-                                  )),
-                              const SizedBox(
-                                width: 10,
-                                height: 10,
-                              ),
-                              listImage.isEmpty ?
-                               const SizedBox(
-                                width: 10,
-                                height: 10,
-                              ) : SmoothPageIndicator(
-                                controller: _pageController,
-                                count: listImage.length,
-                                effect: const ExpandingDotsEffect(
-                                    dotHeight: 2,
-                                    dotWidth: 6,
-                                    dotColor: Color(0xff999999),
-                                    activeDotColor: Color(0xff303030)),
-                              ),
-                            ],
+                          background: GestureDetector(
+                            onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => ZoomImage(listImg: listImage,)));
+                            },
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: 300,
+                                    child: PageView.builder(
+                                      itemCount: listImage.length,
+                                      pageSnapping: true,
+                                      controller: _pageController,
+                                      itemBuilder: (context, pagePosition) {
+                                        return Container(
+                                            width: MediaQuery.of(context).size.width,
+                                            //margin: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                                //color: Colors.amber,
+                                                image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        listImage[pagePosition]),
+                                                    fit: BoxFit.contain)));
+                                      },
+                                    )),
+                                const SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                ),
+                                listImage.isEmpty ?
+                                 const SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                ) : SmoothPageIndicator(
+                                  controller: _pageController,
+                                  count: listImage.length,
+                                  effect: const ExpandingDotsEffect(
+                                      dotHeight: 2,
+                                      dotWidth: 6,
+                                      dotColor: Color(0xff999999),
+                                      activeDotColor: Color(0xff303030)),
+                                ),
+                              ],
+                            ),
                           ),
                         )),
                     SliverToBoxAdapter(

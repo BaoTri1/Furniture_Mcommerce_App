@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:furniture_mcommerce_app/views/main.dart';
+import 'package:furniture_mcommerce_app/views/screens/order_screen/order_screen.dart';
 
 class OrderSuccessScreen extends StatelessWidget {
   const OrderSuccessScreen({super.key});
@@ -55,7 +56,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     child: ElevatedButton(
                       // ignore: avoid_print
                         onPressed: () async {
-
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => OrderScreen()));
                         },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff242424),
